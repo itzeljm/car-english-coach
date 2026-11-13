@@ -34,8 +34,8 @@
   .phase{color:var(--muted);margin:14px 0 6px;font-size:14px}
   .chunk{font-size:40px;font-weight:800;color:var(--accent);margin:4px 0 10px;line-height:1.1;min-height:44px}
   .coach{font-size:24px;line-height:1.35;margin:0 0 14px;min-height:96px}
-  .heard{font-size:20px;color:var(--muted);min-height:56px}
-  .heard b{color:var(--text)}
+  .bar{height:10px;border-radius:6px;background:var(--card);border:1px solid var(--line);overflow:hidden;margin:6px 0 10px}
+  #barfill{height:100%;width:0;background:var(--accent)}
   .fb{font-size:18px;min-height:28px;color:var(--warn)}
   .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
   .stop{border-color:#7f3b3b;color:var(--bad)}
@@ -46,7 +46,7 @@
 <main>
   <section id="menu">
     <h1>Car English Coach</h1>
-    <p class="sub">Hands-free practice for the little connecting words: of, in, on, to, within…</p>
+    <p class="sub">Listen-and-repeat practice for the little connecting words: of, in, on, to, within…</p>
 
     <div class="card">
       <h2>Session length</h2>
@@ -67,7 +67,8 @@
 
     <button class="big" id="start">Start</button>
     <p class="note" id="support"></p>
-    <p class="note">Tap Start before you drive (or have a passenger do it), then keep this tab open and the screen on. Everything after that is voice only.</p>
+    <p class="note" id="voiceInfo"></p>
+    <p class="note">Tap Start before you drive (or have a passenger do it), then keep this tab open and the screen on. The coach speaks, then pauses so you can say each phrase out loud. No microphone needed.</p>
 
     <div class="card" style="margin-top:16px">
       <h2>Progress</h2>
@@ -81,7 +82,7 @@
     <div class="phase" id="phase"></div>
     <div class="chunk" id="chunk"></div>
     <p class="coach" id="coach"></p>
-    <div class="heard" id="heard"></div>
+    <div class="bar"><div id="barfill"></div></div>
     <div class="fb" id="fb"></div>
     <div class="controls">
       <button class="ghost" id="repeat">Repeat</button>
@@ -181,78 +182,38 @@ const PROMPTS = [
   { q: "Tell me about your best friend.", m: "She's someone I can always count on, and we talk about everything." }
 ];
 
-/* ============================ LOGIC (pure, tested in node) ============================ */
-// <logic>
-const DIGITS = {'0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine','10':'ten'};
-const FUNCTION_WORDS = new Set(['of','in','on','at','to','for','with','within','by','about','from','as','so','that','if','whether','or','the','a','an','than','up','out','case','order','soon','long','though','even','such','well','according']);
-
-function stem(w){ return w.length > 4 ? w.replace(/(ing|ed|es|s)$/, '') : w; }
-function tokens(s){
-  return String(s || '').toLowerCase().replace(/[’]/g, "'")
-    .replace(/\b(10|[0-9])\b/g, m => DIGITS[m])
-    .replace(/[^a-z' ]/g, ' ').split(/\s+/).filter(Boolean);
-}
-function checkChunk(chunk, said){
-  const have = new Set(tokens(said).map(stem));
-  const need = tokens(chunk);
-  const missing = need.filter(w => !have.has(stem(w)));
-  return { ok: missing.length === 0, missing, connectors: missing.filter(w => FUNCTION_WORDS.has(w)) };
-}
-
-const SLIPS = [
-  { bad: /\bdepends?\b(?!\s+(on|upon)\b)/, fix: "It depends on the weather.", note: "depend ON" },
-  { bad: /\binterested\b(?!\s+in\b)/, fix: "I'm interested in cooking.", note: "interested IN" },
-  { bad: /\bafraid\b(?!\s+(of|that|to)\b)/, fix: "I'm afraid of the dark.", note: "afraid OF" },
-  { bad: /\blisten(s|ed|ing)?\b(?!\s+(to|in)\b)/, fix: "I listen to music.", note: "listen TO" },
-  { bad: /\bwait(s|ed|ing)?\b(?!\s+(for|until|till|on|a|an|up|here|there|and|to|one|two|just|so)\b)/, fix: "I'm waiting for a call.", note: "wait FOR" },
-  { bad: /\bworried\b(?!\s+(about|that|for)\b)/, fix: "I'm worried about the test.", note: "worried ABOUT" },
-  { bad: /\bmarried with\b/, fix: "I'm married to my husband.", note: "married TO" },
-  { bad: /\b(a lot|a couple|a bunch)\b(?!\s+(of|more|less|better|worse|easier|harder|longer|bigger|faster|slower|cheaper|different|and|but|or|so)\b)\s+[a-z]+/, fix: "a lot of people", note: "a lot OF" },
-  { bad: /\b(at|on) the (morning|afternoon|evening)\b/, fix: "I exercise in the morning.", note: "IN the morning" },
-  { bad: /\bin (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/, fix: "I'll see you on Monday.", note: "ON Monday" },
-  { bad: /\bin the other hand\b/, fix: "On the other hand, it's expensive.", note: "ON the other hand" },
-  { bad: /\bdifferent (of|to)\b/, fix: "It's different from before.", note: "different FROM" },
-  { bad: /\bdiscuss(es|ed|ing)? about\b/, fix: "We discussed the plan.", note: "discuss (no 'about')" },
-  { bad: /\barrive[sd]? to\b/, fix: "I arrived at the office.", note: "arrive AT / IN" },
-  { bad: /\blook(s|ed|ing)? forward\b(?!\s+to\b)/, fix: "I'm looking forward to the weekend.", note: "look forward TO" },
-  { bad: /\bi(?:'m| am) agree\b/, fix: "I agree with you.", note: "I agree" }
-];
-function findSlips(said){
-  const t = tokens(said).join(' ');
-  return SLIPS.filter(s => s.bad.test(t));
-}
-function usedChunks(said, chunks){
-  return chunks.filter(c => checkChunk(c, said).ok);
-}
-// </logic>
-
 /* ============================ APP ============================ */
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const synth = window.speechSynthesis;
 
 const ALL = [];
 UNITS.forEach((u, ui) => u.items.forEach((it, ii) => ALL.push({ ...it, id: ui + '.' + ii, ui, unit: u })));
-const ALL_CHUNKS = ALL.map(i => i.c);
 
 let settings = load('cec_settings', { len: 15, mode: 'full', hints: true, rate: 0.9 });
 let progress = load('cec_progress', {});
 function load(k, d){ try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } }
 function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 
-let running = false, skipReq = false, repeatReq = false, curRec = null, wakeLock = null, audioCtx = null;
+let running = false, skipReq = false, repeatReq = false, wakeLock = null, audioCtx = null;
 let voiceEn = null, voiceEs = null;
 
+/* ---------- Apple voices: prefer Premium, then Enhanced ---------- */
+function rank(v){ return /premium/i.test(v.name) ? 3 : /enhanced/i.test(v.name) ? 2 : /siri/i.test(v.name) ? 2 : 1; }
 function pickVoices(){
   const vs = synth ? synth.getVoices() : [];
-  const best = (lang, prefer) => {
-    const pool = vs.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(lang));
-    for (const p of prefer){ const hit = pool.find(v => v.name.includes(p)); if (hit) return hit; }
-    return pool.find(v => !v.localService === false) || pool[0] || null;
+  const best = (langs, prefer) => {
+    const pool = vs.filter(v => langs.some(l => v.lang.replace('_', '-').toLowerCase().startsWith(l)));
+    const pi = v => { const i = prefer.findIndex(p => v.name.includes(p)); return i < 0 ? 99 : i; };
+    return pool.sort((a, b) => rank(b) - rank(a) || pi(a) - pi(b))[0] || null;
   };
-  voiceEn = best('en-us', ['Samantha', 'Ava', 'Allison', 'Nicky', 'Susan']) || best('en', []);
-  voiceEs = best('es-mx', ['Paulina']) || best('es-us', ['Paulina', 'Monica']) || best('es', []);
+  voiceEn = best(['en-us'], ['Ava', 'Zoe', 'Evan', 'Samantha', 'Allison', 'Nicky']) || best(['en'], []);
+  voiceEs = best(['es-mx', 'es-us'], ['Paulina', 'Monica', 'Mónica']) || best(['es'], []);
+  const info = $('#voiceInfo');
+  if (!info) return;
+  if (!voiceEn) info.textContent = '';
+  else if (rank(voiceEn) >= 3) info.textContent = 'Voice: ' + voiceEn.name;
+  else info.textContent = 'Voice: ' + voiceEn.name + '. For a more natural voice, download a Premium one: iPhone Settings > Accessibility > Spoken Content > Voices > English > Ava (Premium).';
 }
 if (synth){ pickVoices(); synth.onvoiceschanged = pickVoices; }
 
@@ -262,7 +223,7 @@ function setPhase(t){ $('#phase').textContent = t; }
 function setChunk(t){ $('#chunk').textContent = t || ''; }
 function setCoach(t){ $('#coach').textContent = t || ''; }
 function setFb(t){ $('#fb').textContent = t || ''; }
-function setHeard(t){ const h = $('#heard'); h.innerHTML = t ? 'You said: <b></b>' : ''; if (t) h.querySelector('b').textContent = t; }
+function setBar(p){ $('#barfill').style.width = (p * 100) + '%'; }
 
 function beep(f = 660, ms = 120){
   try {
@@ -273,15 +234,15 @@ function beep(f = 660, ms = 120){
   } catch {}
 }
 
-/* ---------- speech out / in ---------- */
-function interrupt(){ try { synth.cancel(); } catch {} try { curRec && curRec.abort(); } catch {} }
+/* ---------- speech out + pauses ---------- */
+function interrupt(){ try { synth.cancel(); } catch {} }
 const halted = () => !running || skipReq || repeatReq;
 
 function say(text, lang = 'en', show = true){
   return new Promise(res => {
     if (!running || !synth) return res();
     if (show && lang === 'en') setCoach(text);
-    setPill('Coach speaking', 'speak');
+    setPill('Listen', 'speak'); setBar(0);
     const u = new SpeechSynthesisUtterance(text);
     const v = lang === 'es' ? voiceEs : voiceEn;
     if (v){ u.voice = v; u.lang = v.lang; } else u.lang = lang === 'es' ? 'es-MX' : 'en-US';
@@ -294,45 +255,35 @@ function say(text, lang = 'en', show = true){
   });
 }
 
-// Returns transcript string, '' for silence, or null if speech recognition is unavailable.
-function hear(maxMs = 9000){
-  return new Promise(async res => {
-    if (!running) return res('');
-    if (!SR){ setPill('Your turn', 'listen'); beep(); await sleep(Math.min(maxMs, 5000)); return res(null); }
-    const rec = new SR();
-    rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
-    let text = '', done = false;
-    const finish = () => { if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); curRec = null; res(text.trim()); };
-    rec.onresult = e => { text = Array.from(e.results).map(r => r[0].transcript).join(' '); setHeard(text); };
-    rec.onerror = finish; rec.onend = finish;
-    const t1 = setTimeout(() => { try { rec.stop(); } catch {} }, maxMs);
-    const t2 = setTimeout(finish, maxMs + 2500);
-    curRec = rec; setHeard(''); setPill('Your turn', 'listen'); beep();
-    try { rec.start(); } catch { finish(); }
-  });
+// A silent pause for her to say the words out loud.
+async function yourTurn(ms, label = 'Say it out loud'){
+  if (!running) return;
+  setPill('Your turn: ' + label, 'listen'); beep();
+  const t0 = Date.now();
+  while (!halted() && Date.now() - t0 < ms){ setBar((Date.now() - t0) / ms); await sleep(100); }
+  setBar(0);
 }
+const turnMs = text => Math.max(4000, text.split(/\s+/).length * 750 + 1500);
 
 /* ---------- progress ---------- */
-function rec(id, ok){
-  const p = progress[id] || { ok: 0, miss: 0, last: 0 };
-  ok ? p.ok++ : p.miss++; p.last = Date.now(); progress[id] = p; save('cec_progress', progress);
+function rec(id){
+  const p = progress[id] || { n: 0, last: 0 };
+  p.n++; p.last = Date.now(); progress[id] = p; save('cec_progress', progress);
 }
 function buildQueue(){
-  const seen = ALL.filter(i => progress[i.id]);
-  const review = seen.filter(i => progress[i.id].miss > progress[i.id].ok).sort((a, b) => progress[a.id].last - progress[b.id].last).slice(0, 4);
+  const seen = ALL.filter(i => progress[i.id]).sort((a, b) => progress[a.id].last - progress[b.id].last);
+  const review = seen.slice(0, 3);
   const fresh = ALL.filter(i => !progress[i.id]);
-  const rest = seen.filter(i => !review.includes(i)).sort((a, b) => progress[a.id].last - progress[b.id].last);
-  return [...review, ...fresh, ...rest];
+  return [...review, ...fresh, ...seen.slice(3)];
 }
 function renderProgress(){
   const started = ALL.filter(i => progress[i.id]).length;
-  const solid = ALL.filter(i => progress[i.id] && progress[i.id].ok > progress[i.id].miss).length;
-  $('#prog').innerHTML = '<div>' + started + ' of ' + ALL.length + ' phrases started</div><div class="note">' + solid + ' feel solid so far</div>';
+  $('#prog').innerHTML = '<div>' + started + ' of ' + ALL.length + ' phrases practiced</div>';
 }
 
 /* ---------- lesson steps ---------- */
 async function drillItem(it, lastUnit){
-  setPhase('Drill · ' + it.unit.title); setChunk(it.c); setFb(''); setHeard('');
+  setPhase('Practice · ' + it.unit.title); setChunk(it.c); setFb('');
   if (lastUnit !== it.ui){
     await say('New group: ' + it.unit.title + '.');
     if (halted()) return;
@@ -343,74 +294,26 @@ async function drillItem(it, lastUnit){
   await say(it.s); if (halted()) return;
   if (settings.hints){ await say(it.es, 'es', false); if (halted()) return; }
 
-  let firstTry = true;
-  await say('Now you. Repeat it.', 'en', false); if (halted()) return;
-  let said = await hear(9000); if (halted()) return;
-  if (said !== null){
-    let r = checkChunk(it.c, said);
-    if (!r.ok){
-      firstTry = false;
-      const word = r.connectors.length ? r.connectors.join(' and ') : r.missing.join(' and ');
-      setFb(r.connectors.length ? 'Watch the little word: ' + word : 'Close. Listen again.');
-      await say(r.connectors.length ? 'Almost. Listen for the little word: ' + word + '.' : 'Close. Listen again.', 'en', false); if (halted()) return;
-      await say(it.s); if (halted()) return;
-      await say('Again.', 'en', false);
-      said = await hear(9000); if (halted()) return;
-      r = checkChunk(it.c, said || '');
-    }
-    if (r.ok){ setFb('Good'); await say('Good.', 'en', false); } else { setFb(''); await say('Okay. We will see it again later.', 'en', false); }
-    if (halted()) return;
-  }
+  await say('Now you. Say it.', 'en', false); if (halted()) return;
+  await yourTurn(turnMs(it.s)); if (halted()) return;
+  await say('Again, listen.', 'en', false); if (halted()) return;
+  await say(it.s); if (halted()) return;
 
-  setHeard(''); setFb('');
+  setChunk(it.c);
   await say('Now make your own sentence with: ' + it.c + '.'); if (halted()) return;
-  const own = await hear(14000); if (halted()) return;
-  let ownOk = true;
-  if (own !== null){
-    const r = checkChunk(it.c, own);
-    ownOk = r.ok;
-    if (r.ok){ setFb('Nice'); await say('Nice. That sounded natural.', 'en', false); }
-    else {
-      setFb(own ? 'Try: ' + it.s : '');
-      await say((own ? 'Good try. ' : 'No problem. ') + 'For example: ' + it.s, 'en', false);
-    }
-  } else { await sleep(500); }
-  if (halted()) return;
-  rec(it.id, firstTry && ownOk);
+  await yourTurn(10000, 'your own sentence'); if (halted()) return;
+  await say('Nice. For example: ' + it.s, 'en', false); if (halted()) return;
+  rec(it.id);
 }
 
 async function talkItem(p){
-  setPhase('Conversation'); setChunk(''); setFb(''); setHeard('');
+  setPhase('Conversation'); setChunk(''); setFb('');
   await say(p.q); if (halted()) return;
-  const said = await hear(16000); if (halted()) return;
-
-  if (said === null || said === ''){
-    await say('No problem. Here is one way to say it: ' + p.m); if (halted()) return;
-    await say('Say it with me.', 'en', false); await hear(12000); return;
-  }
-  const slips = findSlips(said);
-  if (slips.length){
-    const s = slips[0];
-    setFb(s.note);
-    await say('Nice. I would say it like this: ' + s.fix); if (halted()) return;
-    if (settings.hints){ await say('Recuerda: ' + s.note.replace(/[()]/g, ''), 'es', false); if (halted()) return; }
-    await say('Try that part again.', 'en', false);
-    await hear(9000); if (halted()) return;
-    await say('Good.', 'en', false);
-    return;
-  }
-  const used = usedChunks(said, ALL_CHUNKS);
-  if (used.length){
-    used.forEach(c => { const it = ALL.find(i => i.c === c); if (it) rec(it.id, true); });
-    setFb('You used: ' + used.slice(0, 2).join(', '));
-    await say('Very good. I liked how you used ' + used[0] + '.', 'en', false);
-  } else {
-    setFb('Add a connector');
-    await say('Good. You could also say it with more connectors, like this: ' + p.m); if (halted()) return;
-    await say('Your turn. Say it like that.', 'en', false);
-    await hear(14000);
-    if (!halted()) await say('Nice.', 'en', false);
-  }
+  await yourTurn(11000, 'answer out loud'); if (halted()) return;
+  await say('Here is one way to say it: ' + p.m); if (halted()) return;
+  await say('Now say it with me.', 'en', false); if (halted()) return;
+  await yourTurn(turnMs(p.m)); if (halted()) return;
+  await say('Good.', 'en', false);
 }
 
 /* ---------- session ---------- */
@@ -429,8 +332,7 @@ async function runSession(){
   const elapsed = () => Date.now() - t0;
   const queue = buildQueue(); let qi = 0, lastUnit = -1, drilled = [];
   const doDrill = settings.mode !== 'talk', doTalk = settings.mode !== 'drill';
-  const drillUntil = settings.mode === 'drill' ? 0.93 : 0.58;
-  const talkFrom = settings.mode === 'talk' ? 0 : 0.58;
+  const drillUntil = settings.mode === 'drill' ? 0.93 : 0.62;
 
   await say("Hi! Let's practice. Short connecting words, like of, in, on, and within.", 'en');
   if (doDrill){
@@ -441,7 +343,7 @@ async function runSession(){
     }
   }
   if (doTalk && running){
-    await stepWrap(async () => { setPhase('Conversation'); setChunk(''); setHeard(''); setFb(''); await say("Now let's talk. Answer in full sentences. I will help you gently."); });
+    await stepWrap(async () => { setPhase('Conversation'); setChunk(''); setFb(''); await say("Now let's talk. Answer out loud in full sentences. Then I will show you one way to say it."); });
     const order = [...PROMPTS].sort(() => Math.random() - 0.5); let pi = 0;
     while (running && elapsed() < budget * 0.93 && pi < order.length){
       const p = order[pi++];
@@ -449,12 +351,12 @@ async function runSession(){
     }
   }
   if (running){
-    setPhase('Done'); setChunk(''); setHeard(''); setFb('');
+    setPhase('Done'); setChunk(''); setFb('');
     const names = drilled.slice(-4).map(i => i.c);
     await say(names.length ? 'Great work today. Remember: ' + names.join(', ') + '.' : 'Great work today.');
     await say('See you next time.', 'en', false);
   }
-  stopSession(true);
+  stopSession();
 }
 
 async function startSession(){
@@ -463,11 +365,11 @@ async function startSession(){
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
   try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
   $('#menu').hidden = true; $('#live').hidden = false;
-  setPill('Starting…'); setCoach(''); setHeard(''); setFb(''); setChunk('');
+  setPill('Starting…'); setCoach(''); setFb(''); setChunk(''); setBar(0);
   if (synth){ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); }
   runSession();
 }
-function stopSession(finished){
+function stopSession(){
   running = false; interrupt();
   try { wakeLock && wakeLock.release(); } catch {} wakeLock = null;
   $('#live').hidden = true; $('#menu').hidden = false; renderProgress();
@@ -485,14 +387,14 @@ chips('#lenChips', 'len', Number); chips('#modeChips', 'mode', String);
 $('#hints').checked = settings.hints; $('#hints').onchange = e => { settings.hints = e.target.checked; save('cec_settings', settings); };
 $('#rate').value = settings.rate; $('#rate').oninput = e => { settings.rate = Number(e.target.value); save('cec_settings', settings); };
 $('#start').onclick = startSession;
-$('#stop').onclick = () => stopSession(false);
+$('#stop').onclick = stopSession;
 $('#skip').onclick = () => { skipReq = true; interrupt(); };
 $('#repeat').onclick = () => { repeatReq = true; interrupt(); };
 $('#reset').onclick = () => { if (confirm('Reset all progress?')){ progress = {}; save('cec_progress', progress); renderProgress(); } };
 document.addEventListener('visibilitychange', async () => { if (running && !document.hidden && navigator.wakeLock){ try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } });
 
-$('#support').textContent = !synth ? 'This browser can’t speak out loud, so the coach won’t work here. Try Safari on iPhone.'
-  : !SR ? 'Voice recognition isn’t available here, so the coach will pause for you to repeat but can’t check what you say. Safari on iPhone is best.' : '';
+if (!synth) $('#support').textContent = 'This browser can’t speak out loud. Try Safari on iPhone.';
+pickVoices();
 renderProgress();
 </script>
 </body>
