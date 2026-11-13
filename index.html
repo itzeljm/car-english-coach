@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Car English Coach</title>
+<style>
+  :root{--bg:#0f1720;--card:#18232f;--line:#2a3846;--text:#f2f6fa;--muted:#9fb0c0;--accent:#5eead4;--accent-ink:#06352f;--warn:#fbbf24;--bad:#f87171}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  main{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+  h1{font-size:26px;margin:8px 0 4px}
+  h2{font-size:15px;margin:0 0 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{flex:1;min-width:96px;padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:16px}
+  .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 0}
+  .row label{font-size:16px}
+  input[type=range]{width:55%}
+  input[type=checkbox]{width:26px;height:26px}
+  button{font:inherit;cursor:pointer}
+  .big{width:100%;padding:20px;border:0;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-size:22px;font-weight:800}
+  .ghost{padding:16px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:18px;font-weight:600}
+  .note{color:var(--muted);font-size:14px;margin:10px 0 0;line-height:1.4}
+  .link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:6px 0}
+  #live{display:flex;flex-direction:column;min-height:calc(100vh - 32px)}
+  .pill{align-self:flex-start;padding:8px 14px;border-radius:999px;font-weight:700;font-size:16px;background:var(--card);border:1px solid var(--line)}
+  .pill.speak{background:#1e3a5f;border-color:#2f5d94}
+  .pill.listen{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);animation:pulse 1.2s infinite}
+  @keyframes pulse{50%{opacity:.65}}
+  .phase{color:var(--muted);margin:14px 0 6px;font-size:14px}
+  .chunk{font-size:40px;font-weight:800;color:var(--accent);margin:4px 0 10px;line-height:1.1;min-height:44px}
+  .coach{font-size:24px;line-height:1.35;margin:0 0 14px;min-height:96px}
+  .heard{font-size:20px;color:var(--muted);min-height:56px}
+  .heard b{color:var(--text)}
+  .fb{font-size:18px;min-height:28px;color:var(--warn)}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
+  .stop{border-color:#7f3b3b;color:var(--bad)}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <section id="menu">
+    <h1>Car English Coach</h1>
+    <p class="sub">Hands-free practice for the little connecting words: of, in, on, to, within…</p>
+
+    <div class="card">
+      <h2>Session length</h2>
+      <div class="chips" id="lenChips">
+        <button class="chip" data-v="10" aria-pressed="false">10 min</button>
+        <button class="chip" data-v="15" aria-pressed="true">15 min</button>
+        <button class="chip" data-v="20" aria-pressed="false">20 min</button>
+      </div>
+      <h2 style="margin-top:16px">What to practice</h2>
+      <div class="chips" id="modeChips">
+        <button class="chip" data-v="full" aria-pressed="true">Full session</button>
+        <button class="chip" data-v="drill" aria-pressed="false">Drills</button>
+        <button class="chip" data-v="talk" aria-pressed="false">Conversation</button>
+      </div>
+      <div class="row"><label for="hints">Short Spanish hints</label><input type="checkbox" id="hints" checked></div>
+      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05" value="0.9"></div>
+    </div>
+
+    <button class="big" id="start">Start</button>
+    <p class="note" id="support"></p>
+    <p class="note">Tap Start before you drive (or have a passenger do it), then keep this tab open and the screen on. Everything after that is voice only.</p>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Progress</h2>
+      <div id="prog"></div>
+      <button class="link" id="reset">Reset progress</button>
+    </div>
+  </section>
+
+  <section id="live" hidden>
+    <div class="pill" id="pill">Ready</div>
+    <div class="phase" id="phase"></div>
+    <div class="chunk" id="chunk"></div>
+    <p class="coach" id="coach"></p>
+    <div class="heard" id="heard"></div>
+    <div class="fb" id="fb"></div>
+    <div class="controls">
+      <button class="ghost" id="repeat">Repeat</button>
+      <button class="ghost" id="skip">Skip</button>
+      <button class="ghost stop" id="stop">Stop</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ============================ CONTENT ============================ */
+const UNITS = [
+  { title: "OF", es: "En inglés, 'of' casi siempre se queda entre la cantidad y el sustantivo.", items: [
+    { c: "a lot of", s: "A lot of people drive to work every day.", es: "Siempre 'a lot OF' antes de un sustantivo." },
+    { c: "a couple of", s: "I'll be there in a couple of minutes.", es: "'A couple OF', el 'of' no se omite." },
+    { c: "one of the", s: "She is one of the kindest people I know.", es: "'One OF the' significa uno de los." },
+    { c: "because of", s: "We were late because of the traffic.", es: "'Because OF' va con un sustantivo." },
+    { c: "instead of", s: "Let's walk instead of driving.", es: "'Instead OF' significa en vez de." },
+    { c: "afraid of", s: "I'm afraid of driving at night.", es: "'Afraid OF', no 'afraid from'." },
+    { c: "out of", s: "We ran out of milk this morning.", es: "'Ran out OF' significa se nos acabó." }
+  ]},
+  { title: "IN, ON, AT", es: "Estas tres cambian mucho entre español e inglés. Hay que aprenderlas en bloque.", items: [
+    { c: "interested in", s: "I'm interested in learning new recipes.", es: "'Interested IN', no 'interested on'." },
+    { c: "good at", s: "My sister is really good at math.", es: "'Good AT' significa buena para algo." },
+    { c: "depend on", s: "It depends on the weather.", es: "'Depend ON', no 'of' ni 'from'." },
+    { c: "in the morning", s: "I usually exercise in the morning.", es: "'IN the morning', no 'at the morning'." },
+    { c: "on time", s: "Please try to arrive on time.", es: "'On time' significa a tiempo." },
+    { c: "in front of", s: "I parked in front of the store.", es: "'In front OF' significa enfrente de." },
+    { c: "on the way", s: "I'll buy bread on the way home.", es: "'On the way' significa de camino." }
+  ]},
+  { title: "TO, FOR, WITH", es: "Aquí el español a veces no usa la palabra, pero el inglés sí.", items: [
+    { c: "listen to", s: "I listen to music in the car.", es: "'Listen TO'. En inglés sí lleva 'to'." },
+    { c: "wait for", s: "I'm waiting for a call from my doctor.", es: "'Wait FOR' significa esperar." },
+    { c: "look forward to", s: "I'm looking forward to the weekend.", es: "'Look forward TO' va seguido de -ing o sustantivo." },
+    { c: "agree with", s: "I agree with you completely.", es: "'Agree WITH' una persona." },
+    { c: "ready for", s: "I'm ready for a vacation.", es: "'Ready FOR' significa listo para." },
+    { c: "responsible for", s: "She is responsible for the schedule.", es: "'Responsible FOR' significa responsable de." },
+    { c: "talk to", s: "I need to talk to my boss.", es: "'Talk TO' significa hablar con." }
+  ]},
+  { title: "WITHIN, BY, ABOUT", es: "'Within' significa dentro de un plazo o distancia. Es una de las palabras que más se omiten.", items: [
+    { c: "within an hour", s: "I'll call you within an hour.", es: "'Within' significa dentro de un plazo." },
+    { c: "within walking distance", s: "The market is within walking distance of my house.", es: "'Within' también sirve para distancias." },
+    { c: "by the time", s: "By the time I arrived, they had left.", es: "'By the time' significa para cuando." },
+    { c: "worried about", s: "I'm worried about the test.", es: "'Worried ABOUT' significa preocupada por." },
+    { c: "about to", s: "I'm about to leave.", es: "'About to' significa estar por hacer algo." },
+    { c: "by myself", s: "I did it by myself.", es: "'By myself' significa yo sola." },
+    { c: "talk about", s: "We talked about it yesterday.", es: "'Talk ABOUT' significa hablar de." }
+  ]},
+  { title: "LINKING WORDS", es: "Estas conectan dos ideas. Con ellas tus frases suenan más completas.", items: [
+    { c: "in order to", s: "I woke up early in order to finish the work.", es: "'In order to' significa para (con un verbo)." },
+    { c: "as soon as", s: "I'll call you as soon as I get home.", es: "'As soon as' significa tan pronto como." },
+    { c: "even though", s: "Even though it was raining, we went out.", es: "'Even though' significa aunque." },
+    { c: "in case", s: "Take an umbrella in case it rains.", es: "'In case' significa por si acaso." },
+    { c: "as well as", s: "She speaks English as well as Spanish.", es: "'As well as' significa además de." },
+    { c: "such as", s: "I like fruit, such as mangoes and grapes.", es: "'Such as' significa como por ejemplo." },
+    { c: "according to", s: "According to the news, it will rain tomorrow.", es: "'According to' significa según." },
+    { c: "whether or not", s: "I'll go whether or not it rains.", es: "'Whether or not' significa si o no." }
+  ]},
+  { title: "CONTRAST AND RESULT", es: "Para explicar contraste, causa y resultado.", items: [
+    { c: "in spite of", s: "In spite of the rain, we had a great day.", es: "'In spite OF' significa a pesar de." },
+    { c: "on the other hand", s: "I like the city. On the other hand, it's very expensive.", es: "'ON the other hand', no 'in the other hand'." },
+    { c: "as a result", s: "He studied a lot. As a result, he passed.", es: "'As a result' significa como resultado." },
+    { c: "so that", s: "I left early so that I could avoid traffic.", es: "'So that' significa para que." },
+    { c: "unless", s: "I won't go unless you come with me.", es: "'Unless' significa a menos que." },
+    { c: "although", s: "Although I was tired, I kept going.", es: "'Although' significa aunque." },
+    { c: "that's why", s: "I was tired, and that's why I went to bed early.", es: "'That's why' significa por eso." },
+    { c: "as long as", s: "You can come as long as you're on time.", es: "'As long as' significa siempre que." }
+  ]},
+  { title: "EVERYDAY PHRASES", es: "Frases completas que se usan todos los días.", items: [
+    { c: "in the middle of", s: "I'm in the middle of cooking dinner.", es: "'In the middle OF' significa en medio de." },
+    { c: "thinking of", s: "I'm thinking of visiting my family.", es: "'Thinking OF' o 'thinking ABOUT' son correctos." },
+    { c: "ask about", s: "I'd like to ask about my appointment.", es: "'Ask ABOUT' significa preguntar por." },
+    { c: "up to you", s: "It's up to you.", es: "'Up to you' significa tú decides." },
+    { c: "as far as I know", s: "As far as I know, the store closes at nine.", es: "'As far as I know' significa que yo sepa." },
+    { c: "in the end", s: "In the end, everything worked out.", es: "'In the end' significa al final." },
+    { c: "at least", s: "At least try one bite.", es: "'At least' significa al menos." },
+    { c: "for example", s: "For example, you can take the bus.", es: "'For example' significa por ejemplo." }
+  ]}
+];
+
+const PROMPTS = [
+  { q: "What do you usually do in the morning?", m: "In the morning, I usually take care of the house, and then I go to work." },
+  { q: "Tell me about your family.", m: "I have a lot of family here, and one of my sisters lives close to me." },
+  { q: "What do you like to cook?", m: "I'm interested in trying new recipes, but it depends on how much time I have." },
+  { q: "What did you do last weekend?", m: "Instead of staying home, we went out for lunch with some friends." },
+  { q: "How was the traffic today?", m: "Because of the rain, there was a lot of traffic, so I left early in order to be on time." },
+  { q: "What are you looking forward to this week?", m: "I'm looking forward to seeing my family on Saturday." },
+  { q: "Where do you like to go shopping, and why?", m: "I like going to the market because it's within walking distance of my house." },
+  { q: "Tell me about a problem you had recently.", m: "As soon as I got home, I realized I had left my keys at work, so I had to go back." },
+  { q: "What would you do if you won the lottery?", m: "I would travel, and I would help my family, as well as some friends." },
+  { q: "What are you good at?", m: "I'm good at organizing things, and I'm patient with people." },
+  { q: "What do you think about the weather here?", m: "Even though it gets hot, I'm used to it, and I like being outside." },
+  { q: "What do you do when you feel stressed?", m: "I listen to music, and I take a walk in order to relax." },
+  { q: "What are you worried about these days?", m: "I'm worried about the prices, but I try not to think about it too much." },
+  { q: "How do you make big decisions?", m: "It depends on the situation. In the end, I usually follow my heart." },
+  { q: "What advice would you give a new neighbor?", m: "I would tell them to ask for help, for example, to find a good doctor." },
+  { q: "Tell me about your best friend.", m: "She's someone I can always count on, and we talk about everything." }
+];
+
+/* ============================ LOGIC (pure, tested in node) ============================ */
+// <logic>
+const DIGITS = {'0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine','10':'ten'};
+const FUNCTION_WORDS = new Set(['of','in','on','at','to','for','with','within','by','about','from','as','so','that','if','whether','or','the','a','an','than','up','out','case','order','soon','long','though','even','such','well','according']);
+
+function stem(w){ return w.length > 4 ? w.replace(/(ing|ed|es|s)$/, '') : w; }
+function tokens(s){
+  return String(s || '').toLowerCase().replace(/[’]/g, "'")
+    .replace(/\b(10|[0-9])\b/g, m => DIGITS[m])
+    .replace(/[^a-z' ]/g, ' ').split(/\s+/).filter(Boolean);
+}
+function checkChunk(chunk, said){
+  const have = new Set(tokens(said).map(stem));
+  const need = tokens(chunk);
+  const missing = need.filter(w => !have.has(stem(w)));
+  return { ok: missing.length === 0, missing, connectors: missing.filter(w => FUNCTION_WORDS.has(w)) };
+}
+
+const SLIPS = [
+  { bad: /\bdepends?\b(?!\s+(on|upon)\b)/, fix: "It depends on the weather.", note: "depend ON" },
+  { bad: /\binterested\b(?!\s+in\b)/, fix: "I'm interested in cooking.", note: "interested IN" },
+  { bad: /\bafraid\b(?!\s+(of|that|to)\b)/, fix: "I'm afraid of the dark.", note: "afraid OF" },
+  { bad: /\blisten(s|ed|ing)?\b(?!\s+(to|in)\b)/, fix: "I listen to music.", note: "listen TO" },
+  { bad: /\bwait(s|ed|ing)?\b(?!\s+(for|until|till|on|a|an|up|here|there|and|to|one|two|just|so)\b)/, fix: "I'm waiting for a call.", note: "wait FOR" },
+  { bad: /\bworried\b(?!\s+(about|that|for)\b)/, fix: "I'm worried about the test.", note: "worried ABOUT" },
+  { bad: /\bmarried with\b/, fix: "I'm married to my husband.", note: "married TO" },
+  { bad: /\b(a lot|a couple|a bunch)\b(?!\s+(of|more|less|better|worse|easier|harder|longer|bigger|faster|slower|cheaper|different|and|but|or|so)\b)\s+[a-z]+/, fix: "a lot of people", note: "a lot OF" },
+  { bad: /\b(at|on) the (morning|afternoon|evening)\b/, fix: "I exercise in the morning.", note: "IN the morning" },
+  { bad: /\bin (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/, fix: "I'll see you on Monday.", note: "ON Monday" },
+  { bad: /\bin the other hand\b/, fix: "On the other hand, it's expensive.", note: "ON the other hand" },
+  { bad: /\bdifferent (of|to)\b/, fix: "It's different from before.", note: "different FROM" },
+  { bad: /\bdiscuss(es|ed|ing)? about\b/, fix: "We discussed the plan.", note: "discuss (no 'about')" },
+  { bad: /\barrive[sd]? to\b/, fix: "I arrived at the office.", note: "arrive AT / IN" },
+  { bad: /\blook(s|ed|ing)? forward\b(?!\s+to\b)/, fix: "I'm looking forward to the weekend.", note: "look forward TO" },
+  { bad: /\bi(?:'m| am) agree\b/, fix: "I agree with you.", note: "I agree" }
+];
+function findSlips(said){
+  const t = tokens(said).join(' ');
+  return SLIPS.filter(s => s.bad.test(t));
+}
+function usedChunks(said, chunks){
+  return chunks.filter(c => checkChunk(c, said).ok);
+}
+// </logic>
+
+/* ============================ APP ============================ */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const synth = window.speechSynthesis;
+
+const ALL = [];
+UNITS.forEach((u, ui) => u.items.forEach((it, ii) => ALL.push({ ...it, id: ui + '.' + ii, ui, unit: u })));
+const ALL_CHUNKS = ALL.map(i => i.c);
+
+let settings = load('cec_settings', { len: 15, mode: 'full', hints: true, rate: 0.9 });
+let progress = load('cec_progress', {});
+function load(k, d){ try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } }
+function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+let running = false, skipReq = false, repeatReq = false, curRec = null, wakeLock = null, audioCtx = null;
+let voiceEn = null, voiceEs = null;
+
+function pickVoices(){
+  const vs = synth ? synth.getVoices() : [];
+  const best = (lang, prefer) => {
+    const pool = vs.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(lang));
+    for (const p of prefer){ const hit = pool.find(v => v.name.includes(p)); if (hit) return hit; }
+    return pool.find(v => !v.localService === false) || pool[0] || null;
+  };
+  voiceEn = best('en-us', ['Samantha', 'Ava', 'Allison', 'Nicky', 'Susan']) || best('en', []);
+  voiceEs = best('es-mx', ['Paulina']) || best('es-us', ['Paulina', 'Monica']) || best('es', []);
+}
+if (synth){ pickVoices(); synth.onvoiceschanged = pickVoices; }
+
+/* ---------- UI helpers ---------- */
+function setPill(text, cls){ const p = $('#pill'); p.textContent = text; p.className = 'pill ' + (cls || ''); }
+function setPhase(t){ $('#phase').textContent = t; }
+function setChunk(t){ $('#chunk').textContent = t || ''; }
+function setCoach(t){ $('#coach').textContent = t || ''; }
+function setFb(t){ $('#fb').textContent = t || ''; }
+function setHeard(t){ const h = $('#heard'); h.innerHTML = t ? 'You said: <b></b>' : ''; if (t) h.querySelector('b').textContent = t; }
+
+function beep(f = 660, ms = 120){
+  try {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = f; g.gain.value = 0.08; o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + ms / 1000);
+  } catch {}
+}
+
+/* ---------- speech out / in ---------- */
+function interrupt(){ try { synth.cancel(); } catch {} try { curRec && curRec.abort(); } catch {} }
+const halted = () => !running || skipReq || repeatReq;
+
+function say(text, lang = 'en', show = true){
+  return new Promise(res => {
+    if (!running || !synth) return res();
+    if (show && lang === 'en') setCoach(text);
+    setPill('Coach speaking', 'speak');
+    const u = new SpeechSynthesisUtterance(text);
+    const v = lang === 'es' ? voiceEs : voiceEn;
+    if (v){ u.voice = v; u.lang = v.lang; } else u.lang = lang === 'es' ? 'es-MX' : 'en-US';
+    u.rate = lang === 'es' ? 0.95 : settings.rate;
+    let done = false;
+    const end = () => { if (!done){ done = true; clearTimeout(guard); res(); } };
+    const guard = setTimeout(end, 2500 + text.length * 140 / settings.rate);
+    u.onend = end; u.onerror = end;
+    synth.speak(u);
+  });
+}
+
+// Returns transcript string, '' for silence, or null if speech recognition is unavailable.
+function hear(maxMs = 9000){
+  return new Promise(async res => {
+    if (!running) return res('');
+    if (!SR){ setPill('Your turn', 'listen'); beep(); await sleep(Math.min(maxMs, 5000)); return res(null); }
+    const rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    let text = '', done = false;
+    const finish = () => { if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); curRec = null; res(text.trim()); };
+    rec.onresult = e => { text = Array.from(e.results).map(r => r[0].transcript).join(' '); setHeard(text); };
+    rec.onerror = finish; rec.onend = finish;
+    const t1 = setTimeout(() => { try { rec.stop(); } catch {} }, maxMs);
+    const t2 = setTimeout(finish, maxMs + 2500);
+    curRec = rec; setHeard(''); setPill('Your turn', 'listen'); beep();
+    try { rec.start(); } catch { finish(); }
+  });
+}
+
+/* ---------- progress ---------- */
+function rec(id, ok){
+  const p = progress[id] || { ok: 0, miss: 0, last: 0 };
+  ok ? p.ok++ : p.miss++; p.last = Date.now(); progress[id] = p; save('cec_progress', progress);
+}
+function buildQueue(){
+  const seen = ALL.filter(i => progress[i.id]);
+  const review = seen.filter(i => progress[i.id].miss > progress[i.id].ok).sort((a, b) => progress[a.id].last - progress[b.id].last).slice(0, 4);
+  const fresh = ALL.filter(i => !progress[i.id]);
+  const rest = seen.filter(i => !review.includes(i)).sort((a, b) => progress[a.id].last - progress[b.id].last);
+  return [...review, ...fresh, ...rest];
+}
+function renderProgress(){
+  const started = ALL.filter(i => progress[i.id]).length;
+  const solid = ALL.filter(i => progress[i.id] && progress[i.id].ok > progress[i.id].miss).length;
+  $('#prog').innerHTML = '<div>' + started + ' of ' + ALL.length + ' phrases started</div><div class="note">' + solid + ' feel solid so far</div>';
+}
+
+/* ---------- lesson steps ---------- */
+async function drillItem(it, lastUnit){
+  setPhase('Drill · ' + it.unit.title); setChunk(it.c); setFb(''); setHeard('');
+  if (lastUnit !== it.ui){
+    await say('New group: ' + it.unit.title + '.');
+    if (halted()) return;
+    if (settings.hints){ await say(it.unit.es, 'es', false); if (halted()) return; }
+  }
+  await say('Listen. ' + it.c + '.'); if (halted()) return;
+  await sleep(250);
+  await say(it.s); if (halted()) return;
+  if (settings.hints){ await say(it.es, 'es', false); if (halted()) return; }
+
+  let firstTry = true;
+  await say('Now you. Repeat it.', 'en', false); if (halted()) return;
+  let said = await hear(9000); if (halted()) return;
+  if (said !== null){
+    let r = checkChunk(it.c, said);
+    if (!r.ok){
+      firstTry = false;
+      const word = r.connectors.length ? r.connectors.join(' and ') : r.missing.join(' and ');
+      setFb(r.connectors.length ? 'Watch the little word: ' + word : 'Close. Listen again.');
+      await say(r.connectors.length ? 'Almost. Listen for the little word: ' + word + '.' : 'Close. Listen again.', 'en', false); if (halted()) return;
+      await say(it.s); if (halted()) return;
+      await say('Again.', 'en', false);
+      said = await hear(9000); if (halted()) return;
+      r = checkChunk(it.c, said || '');
+    }
+    if (r.ok){ setFb('Good'); await say('Good.', 'en', false); } else { setFb(''); await say('Okay. We will see it again later.', 'en', false); }
+    if (halted()) return;
+  }
+
+  setHeard(''); setFb('');
+  await say('Now make your own sentence with: ' + it.c + '.'); if (halted()) return;
+  const own = await hear(14000); if (halted()) return;
+  let ownOk = true;
+  if (own !== null){
+    const r = checkChunk(it.c, own);
+    ownOk = r.ok;
+    if (r.ok){ setFb('Nice'); await say('Nice. That sounded natural.', 'en', false); }
+    else {
+      setFb(own ? 'Try: ' + it.s : '');
+      await say((own ? 'Good try. ' : 'No problem. ') + 'For example: ' + it.s, 'en', false);
+    }
+  } else { await sleep(500); }
+  if (halted()) return;
+  rec(it.id, firstTry && ownOk);
+}
+
+async function talkItem(p){
+  setPhase('Conversation'); setChunk(''); setFb(''); setHeard('');
+  await say(p.q); if (halted()) return;
+  const said = await hear(16000); if (halted()) return;
+
+  if (said === null || said === ''){
+    await say('No problem. Here is one way to say it: ' + p.m); if (halted()) return;
+    await say('Say it with me.', 'en', false); await hear(12000); return;
+  }
+  const slips = findSlips(said);
+  if (slips.length){
+    const s = slips[0];
+    setFb(s.note);
+    await say('Nice. I would say it like this: ' + s.fix); if (halted()) return;
+    if (settings.hints){ await say('Recuerda: ' + s.note.replace(/[()]/g, ''), 'es', false); if (halted()) return; }
+    await say('Try that part again.', 'en', false);
+    await hear(9000); if (halted()) return;
+    await say('Good.', 'en', false);
+    return;
+  }
+  const used = usedChunks(said, ALL_CHUNKS);
+  if (used.length){
+    used.forEach(c => { const it = ALL.find(i => i.c === c); if (it) rec(it.id, true); });
+    setFb('You used: ' + used.slice(0, 2).join(', '));
+    await say('Very good. I liked how you used ' + used[0] + '.', 'en', false);
+  } else {
+    setFb('Add a connector');
+    await say('Good. You could also say it with more connectors, like this: ' + p.m); if (halted()) return;
+    await say('Your turn. Say it like that.', 'en', false);
+    await hear(14000);
+    if (!halted()) await say('Nice.', 'en', false);
+  }
+}
+
+/* ---------- session ---------- */
+async function stepWrap(fn){
+  while (running){
+    skipReq = false; repeatReq = false;
+    await fn();
+    if (!running) return;
+    if (repeatReq) continue;
+    return;
+  }
+}
+
+async function runSession(){
+  const budget = settings.len * 60 * 1000, t0 = Date.now();
+  const elapsed = () => Date.now() - t0;
+  const queue = buildQueue(); let qi = 0, lastUnit = -1, drilled = [];
+  const doDrill = settings.mode !== 'talk', doTalk = settings.mode !== 'drill';
+  const drillUntil = settings.mode === 'drill' ? 0.93 : 0.58;
+  const talkFrom = settings.mode === 'talk' ? 0 : 0.58;
+
+  await say("Hi! Let's practice. Short connecting words, like of, in, on, and within.", 'en');
+  if (doDrill){
+    while (running && elapsed() < budget * drillUntil && qi < queue.length){
+      const it = queue[qi++];
+      await stepWrap(() => drillItem(it, lastUnit));
+      lastUnit = it.ui; drilled.push(it);
+    }
+  }
+  if (doTalk && running){
+    await stepWrap(async () => { setPhase('Conversation'); setChunk(''); setHeard(''); setFb(''); await say("Now let's talk. Answer in full sentences. I will help you gently."); });
+    const order = [...PROMPTS].sort(() => Math.random() - 0.5); let pi = 0;
+    while (running && elapsed() < budget * 0.93 && pi < order.length){
+      const p = order[pi++];
+      await stepWrap(() => talkItem(p));
+    }
+  }
+  if (running){
+    setPhase('Done'); setChunk(''); setHeard(''); setFb('');
+    const names = drilled.slice(-4).map(i => i.c);
+    await say(names.length ? 'Great work today. Remember: ' + names.join(', ') + '.' : 'Great work today.');
+    await say('See you next time.', 'en', false);
+  }
+  stopSession(true);
+}
+
+async function startSession(){
+  if (running) return;
+  running = true;
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
+  try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+  $('#menu').hidden = true; $('#live').hidden = false;
+  setPill('Starting…'); setCoach(''); setHeard(''); setFb(''); setChunk('');
+  if (synth){ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); }
+  runSession();
+}
+function stopSession(finished){
+  running = false; interrupt();
+  try { wakeLock && wakeLock.release(); } catch {} wakeLock = null;
+  $('#live').hidden = true; $('#menu').hidden = false; renderProgress();
+  setPill('Ready');
+}
+
+/* ---------- wiring ---------- */
+function chips(id, key, cast){
+  const box = $(id);
+  const paint = () => box.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(cast(b.dataset.v) === settings[key])));
+  box.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; settings[key] = cast(b.dataset.v); save('cec_settings', settings); paint(); });
+  paint();
+}
+chips('#lenChips', 'len', Number); chips('#modeChips', 'mode', String);
+$('#hints').checked = settings.hints; $('#hints').onchange = e => { settings.hints = e.target.checked; save('cec_settings', settings); };
+$('#rate').value = settings.rate; $('#rate').oninput = e => { settings.rate = Number(e.target.value); save('cec_settings', settings); };
+$('#start').onclick = startSession;
+$('#stop').onclick = () => stopSession(false);
+$('#skip').onclick = () => { skipReq = true; interrupt(); };
+$('#repeat').onclick = () => { repeatReq = true; interrupt(); };
+$('#reset').onclick = () => { if (confirm('Reset all progress?')){ progress = {}; save('cec_progress', progress); renderProgress(); } };
+document.addEventListener('visibilitychange', async () => { if (running && !document.hidden && navigator.wakeLock){ try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } });
+
+$('#support').textContent = !synth ? 'This browser can’t speak out loud, so the coach won’t work here. Try Safari on iPhone.'
+  : !SR ? 'Voice recognition isn’t available here, so the coach will pause for you to repeat but can’t check what you say. Safari on iPhone is best.' : '';
+renderProgress();
+</script>
+</body>
+</html>
