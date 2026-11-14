@@ -136,16 +136,17 @@
   </section>
 </main>
 
-<script src="content.js?v=2"></script>
+<script src="content.js?v=3"></script>
 <script>
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const synth = window.speechSynthesis;
 const KEY = 'cec2';
+const clone = o => JSON.parse(JSON.stringify(o));
 
 /* ---------- saved state ---------- */
 const DEF = { done: {}, last: {}, stars: 0, streak: { n: 0, d: '' }, settings: { rate: 0.9, es: true, keep: true } };
-let S = (() => { try { const x = JSON.parse(localStorage.getItem(KEY)); return x ? { ...DEF, ...x, settings: { ...DEF.settings, ...(x.settings || {}) } } : structuredClone(DEF); } catch { return structuredClone(DEF); } })();
+let S = (() => { try { const x = JSON.parse(localStorage.getItem(KEY)); return x ? { ...DEF, ...x, settings: { ...DEF.settings, ...(x.settings || {}) } } : clone(DEF); } catch { return clone(DEF); } })();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 const byId = id => CATEGORIES.find(c => c.id === id);
 const playable = () => CATEGORIES.filter(c => c.lessons.length);
@@ -308,10 +309,11 @@ function nextAfter(cat, li){
 async function runSession(id, li){
   if (running) return;
   running = true;
+  // iOS only allows audio/speech started synchronously inside the tap, so do this BEFORE any await
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
-  try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
   show('live'); setPill('Starting…');
-  if (synth){ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); }
+  if (synth){ try { synth.cancel(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); } catch {} }
+  try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => {}); } catch {}
   while (running){
     const cat = byId(id);
     await playLesson(cat, li);
@@ -390,7 +392,7 @@ $('#repeat').onclick = () => { repeatReq = true; interrupt(); };
 $('#es').checked = S.settings.es; $('#es').onchange = e => { S.settings.es = e.target.checked; save(); };
 $('#keep').checked = S.settings.keep; $('#keep').onchange = e => { S.settings.keep = e.target.checked; save(); };
 $('#rate').value = S.settings.rate; $('#rate').oninput = e => { S.settings.rate = Number(e.target.value); save(); };
-$('#reset').onclick = () => { if (confirm('Reset all progress?')){ const st = S.settings; S = structuredClone(DEF); S.settings = st; save(); renderHome(); } };
+$('#reset').onclick = () => { if (confirm('Reset all progress?')){ const st = S.settings; S = clone(DEF); S.settings = st; save(); renderHome(); } };
 document.addEventListener('visibilitychange', async () => { if (running && !document.hidden && navigator.wakeLock){ try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } });
 if (!synth) document.querySelector('.sub').textContent = 'This browser can’t speak out loud. Please open this page in Safari on an iPhone.';
 renderHome();
