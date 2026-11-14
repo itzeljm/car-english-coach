@@ -30,8 +30,14 @@
   .quick span{font-size:34px;line-height:1}
   .quick b{font-size:17px}
   .quick small{color:var(--muted);font-size:13px;line-height:1.2}
-  .quick .wide{grid-column:1/-1;flex-direction:row;justify-content:center;gap:14px;text-align:left;border-color:var(--line);background:var(--card)}
-  .quick .wide div{display:flex;flex-direction:column}
+  #dictQ{width:100%;font:inherit;font-size:17px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);margin:4px 0 8px;-webkit-appearance:none}
+  .dEntry{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+  .dW{font-size:22px;font-weight:800;color:var(--accent)}
+  .dEn{font-size:17px;margin:4px 0 0}
+  .dEs{font-size:17px;color:var(--gold);font-weight:700;margin:2px 0 8px}
+  .dEx{font-size:16px;line-height:1.35;border-top:1px solid var(--line);padding-top:8px}
+  .dEx mark{background:none;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+  .dExEs{color:var(--muted);font-size:15px;margin-top:3px}
   .stCat{font-size:20px;font-weight:800;margin:22px 0 2px}
   .stLes{font-size:14px;color:var(--accent);font-weight:700;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em}
   .stS{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:19px;line-height:1.35}
@@ -118,7 +124,7 @@
       <div class="row"><label for="vEn">English voice</label><select id="vEn"></select></div>
       <div class="row"><label for="vEs">Spanish voice</label><select id="vEs"></select></div>
       <p class="note" id="voiceInfo"></p>
-      <p class="note">App version: <b id="ver">v15</b></p>
+      <p class="note">App version: <b id="ver">v16</b></p>
       <button class="link" id="reset">Reset my progress</button>
     </details>
     <div class="stats">
@@ -135,12 +141,22 @@
     <div class="quick">
       <button id="remix"><span>🔀</span><b>Remix</b><small>Mixed sentences from every topic</small></button>
       <button id="podcast"><span>🎧</span><b>Connectors podcast</b><small>What the little words mean</small></button>
-      <button id="studiedBtn" class="wide"><span>📖</span><div><b>My sentences</b><small>Read all the sentences I have studied</small></div></button>
+      <button id="dictBtn"><span>📚</span><b>Dictionary</b><small>What each connector means</small></button>
+      <button id="studiedBtn"><span>📖</span><b>My sentences</b><small>Read what I have studied</small></button>
     </div>
     <div class="banner" id="voiceBanner" hidden></div>
     <h2>Choose a topic</h2>
     <div class="map" id="map"></div>
     <p class="note">Tap Start before you drive (or ask a passenger), then keep this page open with the screen on. After that, it's all voice. Everything is saved on this phone only.</p>
+  </section>
+
+  <!-- DICTIONARY -->
+  <section id="dict" hidden>
+    <button class="back" id="backDict">‹ Back</button>
+    <h1>📚 Dictionary</h1>
+    <p class="sub">Connecting words: what they mean in English and Spanish.</p>
+    <input type="search" id="dictQ" placeholder="Search a word (English or Spanish)" autocomplete="off" autocapitalize="off">
+    <div id="dictList"></div>
   </section>
 
   <!-- STUDIED SENTENCES -->
@@ -184,6 +200,7 @@
 <script src="more2.js?v=1"></script>
 <script src="more3.js?v=1"></script>
 <script src="more4.js?v=1"></script>
+<script src="dictionary.js?v=1"></script>
 <script>
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -470,7 +487,7 @@ function suggest(avoidId){
 }
 
 /* ---------- screens ---------- */
-function show(v){ ['home', 'cat', 'live', 'studied'].forEach(id => $('#' + id).hidden = id !== v); window.scrollTo(0, 0); }
+function show(v){ ['home', 'cat', 'live', 'studied', 'dict'].forEach(id => $('#' + id).hidden = id !== v); window.scrollTo(0, 0); }
 function renderHome(){
   const cats = playable();
   const totalL = cats.reduce((a, c) => a + c.lessons.length, 0);
@@ -490,6 +507,31 @@ function renderHome(){
       '<span class="ic">' + (d >= n && n ? '⭐' : c.icon) + '</span><div class="nm">' + esc(c.name) + '</div><div class="ss">' + esc(c.es) + '</div>' + (n ? dots : '<div class="ss">Coming soon</div>') + '</button>';
   }).join('');
 }
+let DICT = null;
+function buildDictionary(){
+  // examples: prefer the podcast's hand-picked ones, otherwise the shortest lesson sentence that uses the word
+  const ex = {};
+  PODCAST.forEach(e => e.items.forEach(([c, , en, es]) => { ex[c.toLowerCase()] = [en, es]; }));
+  const best = {};
+  CATEGORIES.forEach(c => c.lessons.forEach(l => l.s.forEach(([r, es]) => (r.match(/\*[^*]+\*/g) || []).forEach(m => {
+    const k = m.slice(1, -1).toLowerCase();
+    if (!best[k] || r.length < best[k][0].length) best[k] = [r, es];
+  }))));
+  DICT = Object.keys(DEFS).sort().map(w => ({ w, en: DEFS[w][0], es: DEFS[w][1], ex: ex[w] || best[w] || null }));
+}
+function dictExample(raw, word){
+  return parse(raw).map(p => p.c && p.t.toLowerCase() === word ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('');
+}
+function renderDict(){
+  if (!DICT) buildDictionary();
+  const q = $('#dictQ').value.trim().toLowerCase();
+  const list = DICT.filter(d => !q || d.w.includes(q) || d.en.toLowerCase().includes(q) || d.es.toLowerCase().includes(q));
+  $('#dictList').innerHTML = list.length ? list.map(d =>
+    '<div class="dEntry"><div class="dW">' + esc(d.w) + '</div><div class="dEn">' + esc(d.en) + '</div><div class="dEs">' + esc(d.es) + '</div>' +
+    (d.ex ? '<div class="dEx">' + dictExample(d.ex[0], d.w) + '<div class="dExEs">' + esc(d.ex[1]) + '</div></div>' : '') + '</div>'
+  ).join('') : '<p class="note">No words found.</p>';
+}
+function openDict(){ $('#dictQ').value = ''; renderDict(); show('dict'); }
 function openStudied(){
   let nS = 0, nL = 0;
   const html = CATEGORIES.map(c => {
@@ -570,6 +612,9 @@ function openCat(id){
 $('#remix').onclick = () => { buildRemix(); runSession('remix', 0); };
 $('#podcast').onclick = () => openPodcast();
 $('#studiedBtn').onclick = openStudied;
+$('#dictBtn').onclick = openDict;
+$('#dictQ').oninput = renderDict;
+$('#backDict').onclick = () => { show('home'); renderHome(); };
 $('#backStudied').onclick = () => { show('home'); renderHome(); };
 $('#map').onclick = e => { const b = e.target.closest('.stop'); if (b && !b.disabled) openCat(b.dataset.id); };
 $('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (!b || b.disabled) return; const id = $('#lessonList').dataset.id; if (id === 'podcast') runPodcast(Number(b.dataset.i)); else runSession(id, Number(b.dataset.i)); };
