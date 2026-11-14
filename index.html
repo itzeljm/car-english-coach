@@ -4,202 +4,155 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Car English Coach</title>
+<meta name="apple-mobile-web-app-title" content="English Road Trip">
+<title>English Road Trip</title>
 <style>
-  :root{--bg:#0f1720;--card:#18232f;--line:#2a3846;--text:#f2f6fa;--muted:#9fb0c0;--accent:#5eead4;--accent-ink:#06352f;--warn:#fbbf24;--bad:#f87171}
+  :root{--bg:#0f1720;--card:#18232f;--line:#2a3846;--text:#f2f6fa;--muted:#9fb0c0;--accent:#5eead4;--accent-ink:#06352f;--gold:#fbbf24;--hot:#fb923c;color-scheme:dark}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
-  main{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
-  h1{font-size:26px;margin:8px 0 4px}
-  h2{font-size:15px;margin:0 0 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-  .sub{color:var(--muted);margin:0 0 18px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{flex:1;min-width:96px;padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:16px}
-  .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 0}
+  main{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  button{font:inherit;cursor:pointer;color:inherit}
+  [hidden]{display:none!important}
+  h1{font-size:28px;margin:6px 0 2px}
+  h2{font-size:14px;margin:22px 0 10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .sub{color:var(--muted);margin:0 0 14px;font-size:17px}
+  .stats{display:flex;gap:10px;margin:12px 0 4px}
+  .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:17px;font-weight:700}
+  .stat small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+  .today{background:linear-gradient(180deg,#1a3a40,#17313a);border:1px solid #2c6b6b;border-radius:20px;padding:18px;margin-top:14px}
+  .today .lab{color:var(--accent);font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+  .today .what{font-size:24px;font-weight:800;margin:6px 0 2px;line-height:1.2}
+  .today .es{color:var(--muted);margin-bottom:14px}
+  .big{width:100%;padding:20px;border:0;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-size:23px;font-weight:800}
+  .ghost{padding:16px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:18px;font-weight:700}
+  .map{position:relative;display:flex;flex-direction:column;gap:14px;padding:6px 0}
+  .map::before{content:"";position:absolute;left:50%;top:20px;bottom:20px;border-left:3px dashed var(--line);transform:translateX(-50%)}
+  .stop{position:relative;width:calc(100% - 28px);text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center}
+  .stop:nth-child(even){align-self:flex-end}
+  .stop .ic{flex:none;width:52px;height:52px;border-radius:50%;background:#10202c;border:2px solid var(--line);display:grid;place-items:center;font-size:26px}
+  .stop.done .ic{border-color:var(--gold);background:#3a2f10}
+  .stop.next .ic{border-color:var(--accent)}
+  .stop .nm{font-size:19px;font-weight:800;line-height:1.15}
+  .stop .ss{font-size:14px;color:var(--muted)}
+  .stop .ld{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.03em}
+  .dots{display:flex;gap:6px;margin-top:8px}
+  .dot{width:14px;height:14px;border-radius:50%;background:#10202c;border:2px solid var(--line)}
+  .dot.on{background:var(--gold);border-color:var(--gold)}
+  .dot.cur{border-color:var(--accent);background:var(--accent)}
+  .stop.soon{opacity:.45;cursor:default}
+  .note{color:var(--muted);font-size:14px;line-height:1.45;margin:10px 0 0}
+  details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:18px}
+  summary{font-weight:700;font-size:17px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 0}
   .row label{font-size:16px}
-  input[type=range]{width:55%}
+  input[type=range]{width:50%}
   input[type=checkbox]{width:26px;height:26px}
-  button{font:inherit;cursor:pointer}
-  .big{width:100%;padding:20px;border:0;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-size:22px;font-weight:800}
-  .ghost{padding:16px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:18px;font-weight:600}
-  .note{color:var(--muted);font-size:14px;margin:10px 0 0;line-height:1.4}
-  .link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:6px 0}
-  #live{display:flex;flex-direction:column;min-height:calc(100vh - 32px)}
-  .pill{align-self:flex-start;padding:8px 14px;border-radius:999px;font-weight:700;font-size:16px;background:var(--card);border:1px solid var(--line)}
+  .link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:8px 0}
+  .banner{background:#2a2410;border:1px solid #6b5a1a;color:#f3e6b0;border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px;line-height:1.45}
+  .back{background:none;border:0;color:var(--accent);font-size:18px;font-weight:700;padding:10px 0}
+  .lessonrow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+  .lessonrow .n{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:#10202c;border:2px solid var(--line)}
+  .lessonrow.done .n{background:var(--gold);border-color:var(--gold);color:#3a2a00}
+  .lessonrow.next .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .lessonrow.locked{opacity:.4;cursor:default}
+  .lessonrow .t{font-size:18px;font-weight:700}
+  .lessonrow .e{font-size:14px;color:var(--muted)}
+
+  #live{display:flex;flex-direction:column;min-height:calc(100dvh - 40px)}
+  .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:var(--muted);font-size:15px}
+  .pill{align-self:flex-start;padding:8px 14px;border-radius:999px;font-weight:800;font-size:17px;background:var(--card);border:1px solid var(--line);margin-top:10px}
   .pill.speak{background:#1e3a5f;border-color:#2f5d94}
   .pill.listen{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);animation:pulse 1.2s infinite}
   @keyframes pulse{50%{opacity:.65}}
-  .phase{color:var(--muted);margin:14px 0 6px;font-size:14px}
-  .chunk{font-size:40px;font-weight:800;color:var(--accent);margin:4px 0 10px;line-height:1.1;min-height:44px}
-  .coach{font-size:24px;line-height:1.35;margin:0 0 14px;min-height:96px}
+  .passes{display:flex;gap:6px;margin-top:10px}
+  .passes span{flex:1;height:8px;border-radius:5px;background:#10202c;border:1px solid var(--line)}
+  .passes span.on{background:var(--accent);border-color:var(--accent)}
+  .sentence{font-size:30px;line-height:1.3;font-weight:700;margin:20px 0 12px}
+  .sentence mark{background:none;color:var(--accent);text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:5px}
+  .es-line{font-size:20px;line-height:1.35;color:var(--muted);margin:0 0 14px}
   .bar{height:10px;border-radius:6px;background:var(--card);border:1px solid var(--line);overflow:hidden;margin:6px 0 10px}
   #barfill{height:100%;width:0;background:var(--accent)}
-  .fb{font-size:18px;min-height:28px;color:var(--warn)}
+  .cheer{font-size:28px;font-weight:800;color:var(--gold);line-height:1.3}
   .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
-  .stop{border-color:#7f3b3b;color:var(--bad)}
-  [hidden]{display:none!important}
+  .stopbtn{border-color:#7f3b3b;color:#f87171}
+  .pop{animation:pop .5s ease-out}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.pill.listen,.pop{animation:none}}
 </style>
 </head>
 <body>
 <main>
-  <section id="menu">
-    <h1>Car English Coach</h1>
-    <p class="sub">Listen-and-repeat practice for the little connecting words: of, in, on, to, within…</p>
-
-    <div class="card">
-      <h2>Session length</h2>
-      <div class="chips" id="lenChips">
-        <button class="chip" data-v="10" aria-pressed="false">10 min</button>
-        <button class="chip" data-v="15" aria-pressed="true">15 min</button>
-        <button class="chip" data-v="20" aria-pressed="false">20 min</button>
-      </div>
-      <h2 style="margin-top:16px">What to practice</h2>
-      <div class="chips" id="modeChips">
-        <button class="chip" data-v="full" aria-pressed="true">Full session</button>
-        <button class="chip" data-v="drill" aria-pressed="false">Drills</button>
-        <button class="chip" data-v="talk" aria-pressed="false">Conversation</button>
-      </div>
-      <div class="row"><label for="hints">Short Spanish hints</label><input type="checkbox" id="hints" checked></div>
-      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05" value="0.9"></div>
+  <!-- HOME -->
+  <section id="home">
+    <h1>English Road Trip</h1>
+    <p class="sub">Practice in the car. Hear it, say it, win stars.</p>
+    <div class="stats">
+      <div class="stat"><span id="stStreak">0</span> days<small>in a row</small></div>
+      <div class="stat">⭐ <span id="stStars">0</span><small>stars</small></div>
+      <div class="stat"><span id="stDone">0</span> / <span id="stTotal">0</span><small>lessons</small></div>
     </div>
-
-    <button class="big" id="start">Start</button>
-    <p class="note" id="support"></p>
-    <p class="note" id="voiceInfo"></p>
-    <p class="note">Tap Start before you drive (or have a passenger do it), then keep this tab open and the screen on. The coach speaks, then pauses so you can say each phrase out loud. No microphone needed.</p>
-
-    <div class="card" style="margin-top:16px">
-      <h2>Progress</h2>
-      <div id="prog"></div>
-      <button class="link" id="reset">Reset progress</button>
+    <div class="today">
+      <div class="lab">Today's lesson</div>
+      <div class="what" id="todayWhat"></div>
+      <div class="es" id="todayEs"></div>
+      <button class="big" id="startToday">Start</button>
     </div>
+    <div class="banner" id="voiceBanner" hidden></div>
+    <h2>Or choose a stop on your trip</h2>
+    <div class="map" id="map"></div>
+    <details>
+      <summary>Settings</summary>
+      <div class="row"><label for="es">Say the Spanish out loud</label><input type="checkbox" id="es"></div>
+      <div class="row"><label for="keep">Keep going after each lesson</label><input type="checkbox" id="keep"></div>
+      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05"></div>
+      <p class="note" id="voiceInfo"></p>
+      <button class="link" id="reset">Reset my progress</button>
+    </details>
+    <p class="note">Tap Start before you drive (or ask a passenger), then keep this page open with the screen on. After that, it's all voice. Everything is saved on this phone only.</p>
   </section>
 
+  <!-- CATEGORY -->
+  <section id="cat" hidden>
+    <button class="back" id="backHome">‹ Back</button>
+    <h1 id="catName"></h1>
+    <p class="sub" id="catEs"></p>
+    <div id="lessonList"></div>
+  </section>
+
+  <!-- LIVE LESSON -->
   <section id="live" hidden>
+    <div class="top"><span id="liveCat"></span><span id="liveLesson"></span></div>
     <div class="pill" id="pill">Ready</div>
-    <div class="phase" id="phase"></div>
-    <div class="chunk" id="chunk"></div>
-    <p class="coach" id="coach"></p>
+    <div class="passes" id="passes"><span></span><span></span><span></span></div>
+    <div class="sentence" id="sentence"></div>
+    <p class="es-line" id="esLine"></p>
     <div class="bar"><div id="barfill"></div></div>
-    <div class="fb" id="fb"></div>
+    <div class="dots" id="sdots"></div>
     <div class="controls">
       <button class="ghost" id="repeat">Repeat</button>
-      <button class="ghost" id="skip">Skip</button>
-      <button class="ghost stop" id="stop">Stop</button>
+      <button class="ghost" id="skip">Next</button>
+      <button class="ghost stopbtn" id="stop">Stop</button>
     </div>
   </section>
 </main>
 
+<script src="content.js?v=1"></script>
 <script>
-/* ============================ CONTENT ============================ */
-const UNITS = [
-  { title: "OF", es: "En inglés, 'of' casi siempre se queda entre la cantidad y el sustantivo.", items: [
-    { c: "a lot of", s: "A lot of people drive to work every day.", es: "Siempre 'a lot OF' antes de un sustantivo." },
-    { c: "a couple of", s: "I'll be there in a couple of minutes.", es: "'A couple OF', el 'of' no se omite." },
-    { c: "one of the", s: "She is one of the kindest people I know.", es: "'One OF the' significa uno de los." },
-    { c: "because of", s: "We were late because of the traffic.", es: "'Because OF' va con un sustantivo." },
-    { c: "instead of", s: "Let's walk instead of driving.", es: "'Instead OF' significa en vez de." },
-    { c: "afraid of", s: "I'm afraid of driving at night.", es: "'Afraid OF', no 'afraid from'." },
-    { c: "out of", s: "We ran out of milk this morning.", es: "'Ran out OF' significa se nos acabó." }
-  ]},
-  { title: "IN, ON, AT", es: "Estas tres cambian mucho entre español e inglés. Hay que aprenderlas en bloque.", items: [
-    { c: "interested in", s: "I'm interested in learning new recipes.", es: "'Interested IN', no 'interested on'." },
-    { c: "good at", s: "My sister is really good at math.", es: "'Good AT' significa buena para algo." },
-    { c: "depend on", s: "It depends on the weather.", es: "'Depend ON', no 'of' ni 'from'." },
-    { c: "in the morning", s: "I usually exercise in the morning.", es: "'IN the morning', no 'at the morning'." },
-    { c: "on time", s: "Please try to arrive on time.", es: "'On time' significa a tiempo." },
-    { c: "in front of", s: "I parked in front of the store.", es: "'In front OF' significa enfrente de." },
-    { c: "on the way", s: "I'll buy bread on the way home.", es: "'On the way' significa de camino." }
-  ]},
-  { title: "TO, FOR, WITH", es: "Aquí el español a veces no usa la palabra, pero el inglés sí.", items: [
-    { c: "listen to", s: "I listen to music in the car.", es: "'Listen TO'. En inglés sí lleva 'to'." },
-    { c: "wait for", s: "I'm waiting for a call from my doctor.", es: "'Wait FOR' significa esperar." },
-    { c: "look forward to", s: "I'm looking forward to the weekend.", es: "'Look forward TO' va seguido de -ing o sustantivo." },
-    { c: "agree with", s: "I agree with you completely.", es: "'Agree WITH' una persona." },
-    { c: "ready for", s: "I'm ready for a vacation.", es: "'Ready FOR' significa listo para." },
-    { c: "responsible for", s: "She is responsible for the schedule.", es: "'Responsible FOR' significa responsable de." },
-    { c: "talk to", s: "I need to talk to my boss.", es: "'Talk TO' significa hablar con." }
-  ]},
-  { title: "WITHIN, BY, ABOUT", es: "'Within' significa dentro de un plazo o distancia. Es una de las palabras que más se omiten.", items: [
-    { c: "within an hour", s: "I'll call you within an hour.", es: "'Within' significa dentro de un plazo." },
-    { c: "within walking distance", s: "The market is within walking distance of my house.", es: "'Within' también sirve para distancias." },
-    { c: "by the time", s: "By the time I arrived, they had left.", es: "'By the time' significa para cuando." },
-    { c: "worried about", s: "I'm worried about the test.", es: "'Worried ABOUT' significa preocupada por." },
-    { c: "about to", s: "I'm about to leave.", es: "'About to' significa estar por hacer algo." },
-    { c: "by myself", s: "I did it by myself.", es: "'By myself' significa yo sola." },
-    { c: "talk about", s: "We talked about it yesterday.", es: "'Talk ABOUT' significa hablar de." }
-  ]},
-  { title: "LINKING WORDS", es: "Estas conectan dos ideas. Con ellas tus frases suenan más completas.", items: [
-    { c: "in order to", s: "I woke up early in order to finish the work.", es: "'In order to' significa para (con un verbo)." },
-    { c: "as soon as", s: "I'll call you as soon as I get home.", es: "'As soon as' significa tan pronto como." },
-    { c: "even though", s: "Even though it was raining, we went out.", es: "'Even though' significa aunque." },
-    { c: "in case", s: "Take an umbrella in case it rains.", es: "'In case' significa por si acaso." },
-    { c: "as well as", s: "She speaks English as well as Spanish.", es: "'As well as' significa además de." },
-    { c: "such as", s: "I like fruit, such as mangoes and grapes.", es: "'Such as' significa como por ejemplo." },
-    { c: "according to", s: "According to the news, it will rain tomorrow.", es: "'According to' significa según." },
-    { c: "whether or not", s: "I'll go whether or not it rains.", es: "'Whether or not' significa si o no." }
-  ]},
-  { title: "CONTRAST AND RESULT", es: "Para explicar contraste, causa y resultado.", items: [
-    { c: "in spite of", s: "In spite of the rain, we had a great day.", es: "'In spite OF' significa a pesar de." },
-    { c: "on the other hand", s: "I like the city. On the other hand, it's very expensive.", es: "'ON the other hand', no 'in the other hand'." },
-    { c: "as a result", s: "He studied a lot. As a result, he passed.", es: "'As a result' significa como resultado." },
-    { c: "so that", s: "I left early so that I could avoid traffic.", es: "'So that' significa para que." },
-    { c: "unless", s: "I won't go unless you come with me.", es: "'Unless' significa a menos que." },
-    { c: "although", s: "Although I was tired, I kept going.", es: "'Although' significa aunque." },
-    { c: "that's why", s: "I was tired, and that's why I went to bed early.", es: "'That's why' significa por eso." },
-    { c: "as long as", s: "You can come as long as you're on time.", es: "'As long as' significa siempre que." }
-  ]},
-  { title: "EVERYDAY PHRASES", es: "Frases completas que se usan todos los días.", items: [
-    { c: "in the middle of", s: "I'm in the middle of cooking dinner.", es: "'In the middle OF' significa en medio de." },
-    { c: "thinking of", s: "I'm thinking of visiting my family.", es: "'Thinking OF' o 'thinking ABOUT' son correctos." },
-    { c: "ask about", s: "I'd like to ask about my appointment.", es: "'Ask ABOUT' significa preguntar por." },
-    { c: "up to you", s: "It's up to you.", es: "'Up to you' significa tú decides." },
-    { c: "as far as I know", s: "As far as I know, the store closes at nine.", es: "'As far as I know' significa que yo sepa." },
-    { c: "in the end", s: "In the end, everything worked out.", es: "'In the end' significa al final." },
-    { c: "at least", s: "At least try one bite.", es: "'At least' significa al menos." },
-    { c: "for example", s: "For example, you can take the bus.", es: "'For example' significa por ejemplo." }
-  ]}
-];
-
-const PROMPTS = [
-  { q: "What do you usually do in the morning?", m: "In the morning, I usually take care of the house, and then I go to work." },
-  { q: "Tell me about your family.", m: "I have a lot of family here, and one of my sisters lives close to me." },
-  { q: "What do you like to cook?", m: "I'm interested in trying new recipes, but it depends on how much time I have." },
-  { q: "What did you do last weekend?", m: "Instead of staying home, we went out for lunch with some friends." },
-  { q: "How was the traffic today?", m: "Because of the rain, there was a lot of traffic, so I left early in order to be on time." },
-  { q: "What are you looking forward to this week?", m: "I'm looking forward to seeing my family on Saturday." },
-  { q: "Where do you like to go shopping, and why?", m: "I like going to the market because it's within walking distance of my house." },
-  { q: "Tell me about a problem you had recently.", m: "As soon as I got home, I realized I had left my keys at work, so I had to go back." },
-  { q: "What would you do if you won the lottery?", m: "I would travel, and I would help my family, as well as some friends." },
-  { q: "What are you good at?", m: "I'm good at organizing things, and I'm patient with people." },
-  { q: "What do you think about the weather here?", m: "Even though it gets hot, I'm used to it, and I like being outside." },
-  { q: "What do you do when you feel stressed?", m: "I listen to music, and I take a walk in order to relax." },
-  { q: "What are you worried about these days?", m: "I'm worried about the prices, but I try not to think about it too much." },
-  { q: "How do you make big decisions?", m: "It depends on the situation. In the end, I usually follow my heart." },
-  { q: "What advice would you give a new neighbor?", m: "I would tell them to ask for help, for example, to find a good doctor." },
-  { q: "Tell me about your best friend.", m: "She's someone I can always count on, and we talk about everything." }
-];
-
-/* ============================ APP ============================ */
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const synth = window.speechSynthesis;
+const KEY = 'cec2';
 
-const ALL = [];
-UNITS.forEach((u, ui) => u.items.forEach((it, ii) => ALL.push({ ...it, id: ui + '.' + ii, ui, unit: u })));
+/* ---------- saved state ---------- */
+const DEF = { done: {}, last: {}, stars: 0, streak: { n: 0, d: '' }, settings: { rate: 0.9, es: true, keep: true } };
+let S = (() => { try { const x = JSON.parse(localStorage.getItem(KEY)); return x ? { ...DEF, ...x, settings: { ...DEF.settings, ...(x.settings || {}) } } : structuredClone(DEF); } catch { return structuredClone(DEF); } })();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+const byId = id => CATEGORIES.find(c => c.id === id);
+const playable = () => CATEGORIES.filter(c => c.lessons.length);
 
-let settings = load('cec_settings', { len: 15, mode: 'full', hints: true, rate: 0.9 });
-let progress = load('cec_progress', {});
-function load(k, d){ try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } }
-function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-
-let running = false, skipReq = false, repeatReq = false, wakeLock = null, audioCtx = null;
+/* ---------- voices (Apple Premium first) ---------- */
 let voiceEn = null, voiceEs = null;
-
-/* ---------- Apple voices: prefer Premium, then Enhanced ---------- */
-function rank(v){ return /premium/i.test(v.name) ? 3 : /enhanced/i.test(v.name) ? 2 : /siri/i.test(v.name) ? 2 : 1; }
+const rank = v => /premium/i.test(v.name) ? 3 : /enhanced|siri/i.test(v.name) ? 2 : 1;
 function pickVoices(){
   const vs = synth ? synth.getVoices() : [];
   const best = (langs, prefer) => {
@@ -207,116 +160,84 @@ function pickVoices(){
     const pi = v => { const i = prefer.findIndex(p => v.name.includes(p)); return i < 0 ? 99 : i; };
     return pool.sort((a, b) => rank(b) - rank(a) || pi(a) - pi(b))[0] || null;
   };
-  voiceEn = best(['en-us'], ['Ava', 'Zoe', 'Evan', 'Samantha', 'Allison', 'Nicky']) || best(['en'], []);
-  voiceEs = best(['es-mx', 'es-us'], ['Paulina', 'Monica', 'Mónica']) || best(['es'], []);
-  const info = $('#voiceInfo');
-  if (!info) return;
-  if (!voiceEn) info.textContent = '';
-  else if (rank(voiceEn) >= 3) info.textContent = 'Voice: ' + voiceEn.name;
-  else info.textContent = 'Voice: ' + voiceEn.name + '. For a more natural voice, download a Premium one: iPhone Settings > Accessibility > Spoken Content > Voices > English > Ava (Premium).';
+  voiceEn = best(['en-us'], ['Ava', 'Zoe', 'Evan', 'Samantha', 'Allison']) || best(['en'], []);
+  voiceEs = best(['es-mx'], ['Paulina']) || best(['es-us'], ['Paulina', 'Monica', 'Mónica']) || best(['es'], []);
+  const need = [];
+  if (!voiceEn || rank(voiceEn) < 3) need.push('English: Ava (Premium)');
+  if (!voiceEs || rank(voiceEs) < 3) need.push('Spanish (Mexico): Paulina (Premium)');
+  const info = 'Voices in use: ' + (voiceEn ? voiceEn.name : 'none') + ' / ' + (voiceEs ? voiceEs.name : 'none') + '.';
+  $('#voiceInfo').textContent = info;
+  const b = $('#voiceBanner');
+  if (need.length){ b.hidden = false; b.textContent = 'For a more natural voice, ask for help to download: ' + need.join(' and ') + '. Open iPhone Settings > Accessibility > Spoken Content > Voices.'; }
+  else b.hidden = true;
 }
 if (synth){ pickVoices(); synth.onvoiceschanged = pickVoices; }
 
-/* ---------- UI helpers ---------- */
-function setPill(text, cls){ const p = $('#pill'); p.textContent = text; p.className = 'pill ' + (cls || ''); }
-function setPhase(t){ $('#phase').textContent = t; }
-function setChunk(t){ $('#chunk').textContent = t || ''; }
-function setCoach(t){ $('#coach').textContent = t || ''; }
-function setFb(t){ $('#fb').textContent = t || ''; }
-function setBar(p){ $('#barfill').style.width = (p * 100) + '%'; }
-
-function beep(f = 660, ms = 120){
-  try {
-    if (!audioCtx) return;
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.value = f; g.gain.value = 0.08; o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + ms / 1000);
-  } catch {}
+/* ---------- sentence helpers ---------- */
+function parse(raw){
+  const parts = [];
+  raw.split(/(\*[^*]+\*)/).forEach(p => { if (!p) return; parts.push(p[0] === '*' ? { t: p.slice(1, -1), c: true } : { t: p, c: false }); });
+  return parts;
 }
+const plain = parts => parts.map(p => p.t).join('');
+function esc(s){ return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
 
-/* ---------- speech out + pauses ---------- */
-function interrupt(){ try { synth.cancel(); } catch {} }
+/* ---------- audio ---------- */
+let running = false, skipReq = false, repeatReq = false, wakeLock = null, audioCtx = null;
 const halted = () => !running || skipReq || repeatReq;
+function interrupt(){ try { synth.cancel(); } catch {} }
+function beep(f = 660, ms = 120){
+  try { if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = f; g.gain.value = 0.08; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + ms / 1000); } catch {}
+}
+function setPill(t, c){ const p = $('#pill'); p.textContent = t; p.className = 'pill ' + (c || ''); }
+function setBar(p){ $('#barfill').style.width = (p * 100) + '%'; }
+function setPass(n){ document.querySelectorAll('#passes span').forEach((s, i) => s.classList.toggle('on', i < n)); }
 
-function say(text, lang = 'en', show = true){
+function makeUtt(text, lang, rate){
+  const u = new SpeechSynthesisUtterance(text);
+  const v = lang === 'es' ? voiceEs : voiceEn;
+  if (v){ u.voice = v; u.lang = v.lang; } else u.lang = lang === 'es' ? 'es-MX' : 'en-US';
+  u.rate = rate; return u;
+}
+function speakSegs(segs, lang){
   return new Promise(res => {
-    if (!running || !synth) return res();
-    if (show && lang === 'en') setCoach(text);
-    setPill('Listen', 'speak'); setBar(0);
-    const u = new SpeechSynthesisUtterance(text);
-    const v = lang === 'es' ? voiceEs : voiceEn;
-    if (v){ u.voice = v; u.lang = v.lang; } else u.lang = lang === 'es' ? 'es-MX' : 'en-US';
-    u.rate = lang === 'es' ? 0.95 : settings.rate;
-    let done = false;
-    const end = () => { if (!done){ done = true; clearTimeout(guard); res(); } };
-    const guard = setTimeout(end, 2500 + text.length * 140 / settings.rate);
-    u.onend = end; u.onerror = end;
-    synth.speak(u);
+    if (!running || !synth || !segs.length) return res();
+    setPill('Listen', 'speak');
+    let n = 0, done = false;
+    const total = segs.reduce((a, s) => a + s.text.length, 0);
+    const fin = () => { if (!done){ done = true; clearTimeout(guard); res(); } };
+    const guard = setTimeout(fin, 3500 + total * 160 / (S.settings.rate * 0.7));
+    segs.forEach(s => {
+      const u = makeUtt(s.text, lang, s.rate);
+      if (s.pitch) u.pitch = s.pitch;
+      if (s.volume != null) u.volume = s.volume;
+      u.onend = u.onerror = () => { if (++n >= segs.length) fin(); };
+      synth.speak(u);
+    });
   });
 }
+const say = (text, lang = 'en') => speakSegs([{ text, rate: lang === 'es' ? Math.min(S.settings.rate, 0.95) : S.settings.rate }], lang);
 
-// A silent pause for her to say the words out loud.
-async function yourTurn(ms, label = 'Say it out loud'){
+// mode: 'slow' (connectors stressed, slow), 'emph' (connectors stressed), 'plain' (natural)
+function sayEnglish(parts, mode){
+  const base = S.settings.rate * (mode === 'slow' ? 0.8 : 1);
+  if (mode === 'plain') return speakSegs([{ text: plain(parts).trim(), rate: base }], 'en');
+  const segs = parts.filter(p => /[a-z0-9]/i.test(p.t)).map(p => p.c
+    ? { text: p.t.trim(), rate: base * 0.8, pitch: 1.2, volume: 1 }
+    : { text: p.t.trim().replace(/^[,;.\s]+|[,;\s]+$/g, ''), rate: base, volume: 0.85 });
+  return speakSegs(segs.filter(s => /[a-z0-9]/i.test(s.text)), 'en');
+}
+
+async function yourTurn(ms){
   if (!running) return;
-  setPill('Your turn: ' + label, 'listen'); beep();
+  setPill('Your turn: say it', 'listen'); beep();
   const t0 = Date.now();
   while (!halted() && Date.now() - t0 < ms){ setBar((Date.now() - t0) / ms); await sleep(100); }
   setBar(0);
 }
-const turnMs = text => Math.max(4000, text.split(/\s+/).length * 750 + 1500);
+const turnMs = text => Math.max(4000, text.split(/\s+/).length * 650 + 1500);
 
-/* ---------- progress ---------- */
-function rec(id){
-  const p = progress[id] || { n: 0, last: 0 };
-  p.n++; p.last = Date.now(); progress[id] = p; save('cec_progress', progress);
-}
-function buildQueue(){
-  const seen = ALL.filter(i => progress[i.id]).sort((a, b) => progress[a.id].last - progress[b.id].last);
-  const review = seen.slice(0, 3);
-  const fresh = ALL.filter(i => !progress[i.id]);
-  return [...review, ...fresh, ...seen.slice(3)];
-}
-function renderProgress(){
-  const started = ALL.filter(i => progress[i.id]).length;
-  $('#prog').innerHTML = '<div>' + started + ' of ' + ALL.length + ' phrases practiced</div>';
-}
-
-/* ---------- lesson steps ---------- */
-async function drillItem(it, lastUnit){
-  setPhase('Practice · ' + it.unit.title); setChunk(it.c); setFb('');
-  if (lastUnit !== it.ui){
-    await say('New group: ' + it.unit.title + '.');
-    if (halted()) return;
-    if (settings.hints){ await say(it.unit.es, 'es', false); if (halted()) return; }
-  }
-  await say('Listen. ' + it.c + '.'); if (halted()) return;
-  await sleep(250);
-  await say(it.s); if (halted()) return;
-  if (settings.hints){ await say(it.es, 'es', false); if (halted()) return; }
-
-  await say('Now you. Say it.', 'en', false); if (halted()) return;
-  await yourTurn(turnMs(it.s)); if (halted()) return;
-  await say('Again, listen.', 'en', false); if (halted()) return;
-  await say(it.s); if (halted()) return;
-
-  setChunk(it.c);
-  await say('Now make your own sentence with: ' + it.c + '.'); if (halted()) return;
-  await yourTurn(10000, 'your own sentence'); if (halted()) return;
-  await say('Nice. For example: ' + it.s, 'en', false); if (halted()) return;
-  rec(it.id);
-}
-
-async function talkItem(p){
-  setPhase('Conversation'); setChunk(''); setFb('');
-  await say(p.q); if (halted()) return;
-  await yourTurn(11000, 'answer out loud'); if (halted()) return;
-  await say('Here is one way to say it: ' + p.m); if (halted()) return;
-  await say('Now say it with me.', 'en', false); if (halted()) return;
-  await yourTurn(turnMs(p.m)); if (halted()) return;
-  await say('Good.', 'en', false);
-}
-
-/* ---------- session ---------- */
+/* ---------- lesson playback ---------- */
 async function stepWrap(fn){
   while (running){
     skipReq = false; repeatReq = false;
@@ -327,75 +248,152 @@ async function stepWrap(fn){
   }
 }
 
-async function runSession(){
-  const budget = settings.len * 60 * 1000, t0 = Date.now();
-  const elapsed = () => Date.now() - t0;
-  const queue = buildQueue(); let qi = 0, lastUnit = -1, drilled = [];
-  const doDrill = settings.mode !== 'talk', doTalk = settings.mode !== 'drill';
-  const drillUntil = settings.mode === 'drill' ? 0.93 : 0.62;
-
-  await say("Hi! Let's practice. Short connecting words, like of, in, on, and within.", 'en');
-  if (doDrill){
-    while (running && elapsed() < budget * drillUntil && qi < queue.length){
-      const it = queue[qi++];
-      await stepWrap(() => drillItem(it, lastUnit));
-      lastUnit = it.ui; drilled.push(it);
-    }
+async function playSentence(cat, li, si){
+  const lesson = cat.lessons[li];
+  const [raw, es] = lesson.s[si];
+  const parts = parse(raw), text = plain(parts);
+  $('#sentence').innerHTML = parts.map(p => p.c ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('');
+  $('#esLine').textContent = es;
+  renderDots(si);
+  for (let pass = 1; pass <= 3; pass++){
+    setPass(pass); setPill('Listen', 'speak'); setBar(0);
+    await sayEnglish(parts, pass === 1 ? 'slow' : pass === 2 ? 'emph' : 'plain'); if (halted()) return;
+    if (pass === 1 && S.settings.es){ await say(es, 'es'); if (halted()) return; }
+    await sleep(150);
+    await yourTurn(turnMs(text)); if (halted()) return;
   }
-  if (doTalk && running){
-    await stepWrap(async () => { setPhase('Conversation'); setChunk(''); setFb(''); await say("Now let's talk. Answer out loud in full sentences. Then I will show you one way to say it."); });
-    const order = [...PROMPTS].sort(() => Math.random() - 0.5); let pi = 0;
-    while (running && elapsed() < budget * 0.93 && pi < order.length){
-      const p = order[pi++];
-      await stepWrap(() => talkItem(p));
-    }
-  }
-  if (running){
-    setPhase('Done'); setChunk(''); setFb('');
-    const names = drilled.slice(-4).map(i => i.c);
-    await say(names.length ? 'Great work today. Remember: ' + names.join(', ') + '.' : 'Great work today.');
-    await say('See you next time.', 'en', false);
-  }
-  stopSession();
 }
 
-async function startSession(){
+function renderDots(cur, all){
+  $('#sdots').innerHTML = [0, 1, 2, 3, 4].map(i => '<span class="dot ' + (all || i < cur ? 'on' : i === cur ? 'cur' : '') + '"></span>').join('');
+}
+
+function today(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function yesterday(){ const d = new Date(Date.now() - 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function recordComplete(cat, li){
+  if ((S.done[cat.id] || 0) === li) S.done[cat.id] = li + 1;
+  S.last[cat.id] = Date.now(); S.stars++;
+  const t = today();
+  if (S.streak.d !== t){ S.streak = { n: S.streak.d === yesterday() ? S.streak.n + 1 : 1, d: t }; }
+  save();
+}
+
+async function playLesson(cat, li){
+  const lesson = cat.lessons[li];
+  $('#liveCat').textContent = cat.icon + ' ' + cat.name;
+  $('#liveLesson').textContent = 'Lesson ' + (li + 1) + ' of ' + cat.lessons.length;
+  $('#sentence').textContent = lesson.t; $('#esLine').textContent = lesson.es; renderDots(-1); setPass(0);
+  await stepWrap(async () => {
+    await say('Lesson ' + (li + 1) + '. ' + lesson.t + '.'); if (halted()) return;
+    if (li === 0 && !(S.done[cat.id])){ await say('Listen, then say each sentence out loud. We do it three times.'); }
+  });
+  for (let si = 0; si < lesson.s.length && running; si++) await stepWrap(() => playSentence(cat, li, si));
+  if (!running) return;
+  recordComplete(cat, li);
+  const cons = [...new Set(lesson.s.flatMap(([r]) => parse(r).filter(p => p.c).map(p => p.t.toLowerCase())))].slice(0, 6);
+  $('#sentence').innerHTML = '<div class="cheer pop">⭐ Lesson complete!<br>Stars: ' + S.stars + ' · Streak: ' + S.streak.n + ' day' + (S.streak.n === 1 ? '' : 's') + '</div>';
+  $('#esLine').textContent = '¡Muy bien!'; renderDots(0, true); setPass(3); setPill('Great job', 'speak');
+  await say('Great job! Lesson complete.'); if (!running) return;
+  if (S.settings.es) await say('¡Muy bien! Terminaste la lección.', 'es');
+  if (!running) return;
+  await say('Remember these words: ' + cons.join(', ') + '.');
+}
+
+function nextAfter(cat, li){
+  const done = S.done[cat.id] || 0;
+  if (li + 1 < cat.lessons.length && li + 1 <= done) return { id: cat.id, li: li + 1 };
+  const s = suggest(cat.id); return { id: s.cat.id, li: s.li };
+}
+
+async function runSession(id, li){
   if (running) return;
   running = true;
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
   try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
-  $('#menu').hidden = true; $('#live').hidden = false;
-  setPill('Starting…'); setCoach(''); setFb(''); setChunk(''); setBar(0);
+  show('live'); setPill('Starting…');
   if (synth){ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); }
-  runSession();
+  while (running){
+    const cat = byId(id);
+    await playLesson(cat, li);
+    if (!running || !S.settings.keep) break;
+    const nx = nextAfter(cat, li); id = nx.id; li = nx.li;
+    const nc = byId(id);
+    $('#sentence').textContent = 'Next: ' + nc.lessons[li].t; $('#esLine').textContent = nc.name; setPill('Next lesson in a moment', 'speak');
+    for (let i = 0; i < 40 && running; i++) await sleep(100);
+  }
+  stopSession();
 }
 function stopSession(){
   running = false; interrupt();
   try { wakeLock && wakeLock.release(); } catch {} wakeLock = null;
-  $('#live').hidden = true; $('#menu').hidden = false; renderProgress();
-  setPill('Ready');
+  show('home'); renderHome();
+}
+
+/* ---------- today's suggestion ---------- */
+function suggest(avoidId){
+  const cats = playable();
+  const open = cats.filter(c => (S.done[c.id] || 0) < c.lessons.length);
+  const pool = open.length ? open : cats;
+  const never = pool.filter(c => !S.last[c.id]);
+  let pick;
+  if (never.length) pick = never[0];
+  else {
+    const others = pool.filter(c => c.id !== avoidId);
+    const list = others.length ? others : pool;
+    pick = list.slice().sort((a, b) => (S.last[a.id] || 0) - (S.last[b.id] || 0))[0];
+  }
+  const done = S.done[pick.id] || 0;
+  const li = done < pick.lessons.length ? done : Math.floor(Math.random() * pick.lessons.length);
+  return { cat: pick, li };
+}
+
+/* ---------- screens ---------- */
+function show(v){ ['home', 'cat', 'live'].forEach(id => $('#' + id).hidden = id !== v); window.scrollTo(0, 0); }
+function renderHome(){
+  const cats = playable();
+  const totalL = cats.reduce((a, c) => a + c.lessons.length, 0);
+  const doneL = cats.reduce((a, c) => a + (S.done[c.id] || 0), 0);
+  const streakOk = S.streak.d === today() || S.streak.d === yesterday();
+  $('#stStreak').textContent = streakOk ? S.streak.n : 0; $('#stStars').textContent = S.stars;
+  $('#stDone').textContent = doneL; $('#stTotal').textContent = totalL;
+  const sg = suggest();
+  $('#todayWhat').textContent = sg.cat.icon + ' ' + sg.cat.name + ': ' + sg.cat.lessons[sg.li].t;
+  $('#todayEs').textContent = sg.cat.es + ' · ' + sg.cat.lessons[sg.li].es;
+  $('#startToday').onclick = () => runSession(sg.cat.id, sg.li);
+  $('#map').innerHTML = CATEGORIES.map(c => {
+    const n = c.lessons.length, d = S.done[c.id] || 0;
+    const cls = !n ? 'soon' : d >= n ? 'done' : c.id === sg.cat.id ? 'next' : '';
+    const dots = n ? '<div class="dots">' + c.lessons.map((_, i) => '<span class="dot ' + (i < d ? 'on' : '') + '"></span>').join('') + '</div>' : '';
+    return '<button class="stop ' + cls + '" data-id="' + c.id + '"' + (n ? '' : ' disabled') + '>' +
+      '<span class="ic">' + (d >= n && n ? '⭐' : c.icon) + '</span><span><div class="nm">' + esc(c.name) + '</div><div class="ss">' + esc(c.es) + '</div>' +
+      '<div class="ld">' + (n ? esc(c.stop) : 'Coming soon') + '</div>' + dots + '</span></button>';
+  }).join('');
+}
+function openCat(id){
+  const c = byId(id), done = S.done[id] || 0;
+  $('#catName').textContent = c.icon + ' ' + c.name; $('#catEs').textContent = c.es;
+  $('#lessonList').innerHTML = c.lessons.map((l, i) => {
+    const st = i < done ? 'done' : i === done ? 'next' : 'locked';
+    return '<button class="lessonrow ' + st + '" data-i="' + i + '"' + (st === 'locked' ? ' disabled' : '') + '><span class="n">' + (st === 'done' ? '✓' : i + 1) + '</span><span><div class="t">' + esc(l.t) + '</div><div class="e">' + esc(l.es) + '</div></span></button>';
+  }).join('');
+  $('#lessonList').dataset.id = id;
+  show('cat');
 }
 
 /* ---------- wiring ---------- */
-function chips(id, key, cast){
-  const box = $(id);
-  const paint = () => box.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(cast(b.dataset.v) === settings[key])));
-  box.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; settings[key] = cast(b.dataset.v); save('cec_settings', settings); paint(); });
-  paint();
-}
-chips('#lenChips', 'len', Number); chips('#modeChips', 'mode', String);
-$('#hints').checked = settings.hints; $('#hints').onchange = e => { settings.hints = e.target.checked; save('cec_settings', settings); };
-$('#rate').value = settings.rate; $('#rate').oninput = e => { settings.rate = Number(e.target.value); save('cec_settings', settings); };
-$('#start').onclick = startSession;
+$('#map').onclick = e => { const b = e.target.closest('.stop'); if (b && !b.disabled) openCat(b.dataset.id); };
+$('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (b && !b.disabled) runSession($('#lessonList').dataset.id, Number(b.dataset.i)); };
+$('#backHome').onclick = () => { show('home'); renderHome(); };
 $('#stop').onclick = stopSession;
 $('#skip').onclick = () => { skipReq = true; interrupt(); };
 $('#repeat').onclick = () => { repeatReq = true; interrupt(); };
-$('#reset').onclick = () => { if (confirm('Reset all progress?')){ progress = {}; save('cec_progress', progress); renderProgress(); } };
+$('#es').checked = S.settings.es; $('#es').onchange = e => { S.settings.es = e.target.checked; save(); };
+$('#keep').checked = S.settings.keep; $('#keep').onchange = e => { S.settings.keep = e.target.checked; save(); };
+$('#rate').value = S.settings.rate; $('#rate').oninput = e => { S.settings.rate = Number(e.target.value); save(); };
+$('#reset').onclick = () => { if (confirm('Reset all progress?')){ const st = S.settings; S = structuredClone(DEF); S.settings = st; save(); renderHome(); } };
 document.addEventListener('visibilitychange', async () => { if (running && !document.hidden && navigator.wakeLock){ try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } });
-
-if (!synth) $('#support').textContent = 'This browser can’t speak out loud. Try Safari on iPhone.';
-pickVoices();
-renderProgress();
+if (!synth) document.querySelector('.sub').textContent = 'This browser can’t speak out loud. Please open this page in Safari on an iPhone.';
+renderHome();
 </script>
 </body>
 </html>
