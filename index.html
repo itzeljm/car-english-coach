@@ -25,6 +25,11 @@
   .today .es{color:var(--muted);margin-bottom:14px}
   .big{width:100%;padding:20px;border:0;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-size:23px;font-weight:800}
   .ghost{padding:16px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:18px;font-weight:700}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .quick button{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:14px 8px;border-radius:20px;border:1px solid #2c6b6b;background:linear-gradient(180deg,#1a3a40,#17313a)}
+  .quick span{font-size:34px;line-height:1}
+  .quick b{font-size:17px}
+  .quick small{color:var(--muted);font-size:13px;line-height:1.2}
   .map{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:2px 0}
   .stop{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 10px 14px;min-height:150px}
   .stop .ic{font-size:44px;line-height:1}
@@ -71,7 +76,8 @@
   .es-line{font-size:20px;line-height:1.35;color:var(--muted);margin:0 0 14px}
   .bar{height:10px;border-radius:6px;background:var(--card);border:1px solid var(--line);overflow:hidden;margin:6px 0 10px}
   .cheer{font-size:28px;font-weight:800;color:var(--gold);line-height:1.3}
-  .top select{flex:1;min-width:0;max-width:46%;font-size:15px;padding:8px 6px;text-overflow:ellipsis}
+  .top #liveLesson{margin-left:auto}
+  #liveCat{width:100%;max-width:none;margin-top:4px;font-size:16px;padding:10px;text-overflow:ellipsis}
   .prog{margin-top:12px;color:var(--muted);font-size:15px}
   .pbar{height:6px;border-radius:4px;background:var(--card);border:1px solid var(--line);overflow:hidden;margin-top:6px}
   #pfill{height:100%;width:0;background:var(--accent);transition:width .4s ease}
@@ -114,6 +120,10 @@
       <div class="es" id="todayEs"></div>
       <button class="big" id="startToday">Start</button>
     </div>
+    <div class="quick">
+      <button id="remix"><span>🔀</span><b>Remix</b><small>Mixed sentences from every topic</small></button>
+      <button id="podcast"><span>🎧</span><b>Connectors podcast</b><small>What the little words mean</small></button>
+    </div>
     <div class="banner" id="voiceBanner" hidden></div>
     <h2>Choose a topic</h2>
     <div class="map" id="map"></div>
@@ -130,7 +140,8 @@
 
   <!-- LIVE LESSON -->
   <section id="live" hidden>
-    <div class="top"><button class="back" id="liveHome">‹ Home</button><select id="liveCat" aria-label="Category"></select><span id="liveLesson"></span></div>
+    <div class="top"><button class="back" id="liveBack">‹ Back</button><button class="back" id="liveHome">⌂ Home</button><span id="liveLesson"></span></div>
+    <select id="liveCat" aria-label="Category"></select>
     <div class="pill" id="pill">Ready</div>
     <div class="prog"><span id="progTxt">Getting ready</span><div class="pbar"><div id="pfill"></div></div></div>
     <div class="sentence" id="sentence"></div>
@@ -146,6 +157,7 @@
 </main>
 
 <script src="content.js?v=3"></script>
+<script src="more.js?v=1"></script>
 <script>
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -160,7 +172,17 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 function fin(id){ if (!S.fin) S.fin = {}; if (!S.fin[id]){ const n = S.done[id] || 0; S.fin[id] = Array.from({ length: n }, (_, i) => i); } return S.fin[id]; }
 const doneCount = id => fin(id).length;
 const firstOpen = c => { const f = fin(c.id); for (let i = 0; i < c.lessons.length; i++) if (!f.includes(i)) return i; return -1; };
-const byId = id => CATEGORIES.find(c => c.id === id);
+let remixCat = null;
+const byId = id => id === 'remix' ? remixCat : CATEGORIES.find(c => c.id === id);
+function buildRemix(n = 12){
+  const byCat = CATEGORIES.map(c => ({ tag: c.icon + ' ' + c.name, pool: c.lessons.flatMap(l => l.s) }));
+  const shuf = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pick = [];
+  while (pick.length < n){
+    for (const c of shuf(byCat.slice())){ if (pick.length >= n) break; const x = c.pool[Math.floor(Math.random() * c.pool.length)]; if (!pick.some(p => p[0] === x[0])) pick.push([x[0], x[1], c.tag]); }
+  }
+  remixCat = { id: 'remix', remix: true, icon: '🔀', name: 'Remix', es: 'Mezcla', lessons: [{ t: 'Mixed practice', es: 'Práctica mezclada', s: shuf(pick) }] };
+}
 const playable = () => CATEGORIES.filter(c => c.lessons.length);
 
 /* ---------- voices (Apple Premium first) ---------- */
@@ -204,7 +226,7 @@ function esc(s){ return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '
 
 /* ---------- audio ---------- */
 let paused = false, running = false, skipReq = false, repeatReq = false, wakeLock = null, audioCtx = null;
-let switchReq = null;
+let switchReq = null, curCatId = null, kind = 'cat', sess = 0;
 const halted = () => !running || skipReq || repeatReq || !!switchReq;
 function interrupt(){ try { synth.cancel(); } catch {} }
 function beep(f = 660, ms = 120){
@@ -212,9 +234,9 @@ function beep(f = 660, ms = 120){
 }
 function setPill(t, c){ const p = $('#pill'); p.textContent = t; p.className = 'pill ' + (c || ''); }
 function setBar(){}
-let curSi = -1, curTotal = 5, passN = 0, progDone = false;
+let curSi = -1, curTotal = 5, passN = 0, progDone = false, progWord = 'Sentence';
 function updProg(){
-  $('#progTxt').textContent = progDone ? 'Lesson complete' : curSi < 0 ? 'Getting ready' : 'Sentence ' + (curSi + 1) + ' of ' + curTotal;
+  $('#progTxt').textContent = progDone ? (kind === 'podcast' ? 'Episode complete' : 'Lesson complete') : curSi < 0 ? 'Getting ready' : progWord + ' ' + (curSi + 1) + ' of ' + curTotal;
   $('#pfill').style.width = (progDone ? 100 : (Math.max(curSi, 0) + Math.max(passN - 1, 0) / 3) / curTotal * 100) + '%';
 }
 function setPass(n){ passN = n; updProg(); }
@@ -268,7 +290,8 @@ async function stepWrap(fn){
 
 async function playSentence(cat, li, si){
   const lesson = cat.lessons[li];
-  const [raw, es] = lesson.s[si];
+  const [raw, es, tag] = lesson.s[si];
+  if (tag) $('#liveLesson').textContent = tag;
   const parts = parse(raw), text = plain(parts);
   $('#sentence').innerHTML = parts.map(p => p.c ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('');
   $('#esLine').textContent = es;
@@ -279,11 +302,17 @@ async function playSentence(cat, li, si){
     await say(es, 'es'); if (halted()) return;
     await sleep(250);
   }
-  setPass(2); setPill('English: stress the connectors', 'speak');
-  await sayEnglish(parts, 'emph'); if (halted()) return;
-  await sleep(250);
-  setPass(3); setPill('English: natural speed', 'speak');
-  await sayEnglish(parts, 'plain'); if (halted()) return;
+  if (cat.remix){
+    setPass(2); setPill('English', 'speak'); await sayEnglish(parts, 'plain'); if (halted()) return;
+    await sleep(300);
+    setPass(3); setPill('English again', 'speak'); await sayEnglish(parts, 'plain'); if (halted()) return;
+  } else {
+    setPass(2); setPill('English: stress the connectors', 'speak');
+    await sayEnglish(parts, 'emph'); if (halted()) return;
+    await sleep(250);
+    setPass(3); setPill('English: natural speed', 'speak');
+    await sayEnglish(parts, 'plain'); if (halted()) return;
+  }
   await sleep(500);
 }
 
@@ -292,21 +321,23 @@ function renderDots(cur, all){ curSi = cur; progDone = !!all; updProg(); }
 function today(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function yesterday(){ const d = new Date(Date.now() - 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function recordComplete(cat, li){
-  if (!fin(cat.id).includes(li)) fin(cat.id).push(li);
-  S.last[cat.id] = Date.now(); S.stars++;
+  if (!cat.remix && !fin(cat.id).includes(li)) fin(cat.id).push(li);
+  if (!cat.remix) S.last[cat.id] = Date.now();
+  S.stars++;
   const t = today();
   if (S.streak.d !== t){ S.streak = { n: S.streak.d === yesterday() ? S.streak.n + 1 : 1, d: t }; }
   save();
 }
 
 async function playLesson(cat, li){
+  curCatId = cat.id; kind = 'cat'; progWord = 'Sentence'; $('#liveCat').hidden = false;
   const lesson = cat.lessons[li]; curTotal = lesson.s.length;
-  const lsel = $('#liveCat'); lsel.innerHTML = playable().map(c => '<option value="' + c.id + '">' + esc(c.icon + ' ' + c.name) + '</option>').join(''); lsel.value = cat.id;
-  $('#liveLesson').textContent = 'Lesson ' + (li + 1) + ' of ' + cat.lessons.length;
+  const lsel = $('#liveCat'); lsel.innerHTML = (cat.remix ? [cat] : []).concat(playable()).map(c => '<option value="' + c.id + '">' + esc(c.icon + ' ' + c.name) + '</option>').join(''); lsel.value = cat.id;
+  $('#liveLesson').textContent = cat.remix ? lesson.s.length + ' sentences' : 'Lesson ' + (li + 1) + ' of ' + cat.lessons.length;
   $('#sentence').textContent = lesson.t; $('#esLine').textContent = lesson.es; renderDots(-1); setPass(0);
   await stepWrap(async () => {
-    await say('Lesson ' + (li + 1) + '. ' + lesson.t + '.'); if (halted()) return;
-    if (li === 0 && fin(cat.id).length === 0){ await say('You will hear each sentence in Spanish, then in English with the connecting words stressed, then the way we say it in a natural conversation. Say it along with me.'); }
+    await say(cat.remix ? 'Remix. Twelve sentences from every topic.' : 'Lesson ' + (li + 1) + '. ' + lesson.t + '.'); if (halted()) return;
+    if (!cat.remix && li === 0 && fin(cat.id).length === 0){ await say('You will hear each sentence in Spanish, then in English with the connecting words stressed, then the way we say it in a natural conversation. Say it along with me.'); }
   });
   for (let si = 0; si < lesson.s.length && running && !switchReq; si++) await stepWrap(() => playSentence(cat, li, si));
   if (!running || switchReq) return;
@@ -321,6 +352,7 @@ async function playLesson(cat, li){
 }
 
 function nextAfter(cat, li){
+  if (cat.remix){ buildRemix(); return { id: 'remix', li: 0 }; }
   const f = fin(cat.id), n = cat.lessons.length;
   for (let k = 1; k < n; k++){ const j = (li + k) % n; if (!f.includes(j)) return { id: cat.id, li: j }; }
   const s = suggest(cat.id); return { id: s.cat.id, li: s.li };
@@ -328,12 +360,12 @@ function nextAfter(cat, li){
 
 async function runSession(id, li){
   if (running) return;
-  running = true; paused = false; setPauseUI();
+  running = true; paused = false; setPauseUI(); const tok = ++sess;
   // iOS only allows audio/speech started synchronously inside the tap, so do this BEFORE any await
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
   show('live'); setPill('Starting…');
   try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => {}); } catch {}
-  while (running){
+  while (running && tok === sess){
     if (switchReq){ id = switchReq.id; li = switchReq.li; switchReq = null; }
     const cat = byId(id);
     await playLesson(cat, li);
@@ -345,12 +377,14 @@ async function runSession(id, li){
     $('#sentence').textContent = 'Next: ' + nc.lessons[li].t; $('#esLine').textContent = nc.name; setPill('Next lesson in a moment', 'speak');
     for (let i = 0; i < 40 && running && !switchReq; i++){ await sleep(100); while (paused && running) await sleep(150); }
   }
-  stopSession();
+  if (running && tok === sess) stopSession('back');
 }
-function stopSession(){
+function stopSession(to){
   running = false; paused = false; switchReq = null; setPauseUI(); interrupt();
   try { wakeLock && wakeLock.release(); } catch {} wakeLock = null;
-  show('home'); renderHome();
+  if (to !== 'home' && kind === 'cat' && curCatId && byId(curCatId) && !byId(curCatId).remix) openCat(curCatId);
+  else if (to !== 'home' && kind === 'podcast') openPodcast();
+  else { show('home'); renderHome(); }
 }
 
 /* ---------- today's suggestion ---------- */
@@ -392,6 +426,56 @@ function renderHome(){
       '<span class="ic">' + (d >= n && n ? '⭐' : c.icon) + '</span><div class="nm">' + esc(c.name) + '</div><div class="ss">' + esc(c.es) + '</div>' + (n ? dots : '<div class="ss">Coming soon</div>') + '</button>';
   }).join('');
 }
+function openPodcast(){
+  kind = 'podcast';
+  $('#catName').textContent = '🎧 Connectors podcast'; $('#catEs').textContent = 'Qué significan las palabras pequeñas, con ejemplos';
+  $('#lessonList').innerHTML = PODCAST.map((e, i) => '<button class="lessonrow" data-i="' + i + '"><span class="n">' + (i + 1) + '</span><span><div class="t">' + esc(e.t) + '</div><div class="e">' + esc(e.es) + ' · ' + e.items.length + ' words</div></span></button>').join('');
+  $('#lessonList').dataset.id = 'podcast';
+  show('cat');
+}
+function podSteps(ep){
+  const st = [{ big: ep.t, small: ep.es, segs: [{ l: 'en', t: 'Welcome to the Connectors Podcast. ' + ep.t + '. ' + ep.intro }, { l: 'es', t: ep.introEs }] }];
+  ep.items.forEach(([c, mean, ex, exEs]) => {
+    st.push({ big: c, small: mean, segs: [{ l: 'en', t: c, slow: true }, { l: 'es', t: 'Significa: ' + mean + '.' }] });
+    st.push({ big: ex, small: exEs, segs: [{ l: 'en', t: ex, emph: true }, { l: 'es', t: exEs }, { l: 'en', t: ex }] });
+  });
+  st.push({ big: 'See you next time!', small: '¡Hasta la próxima!', segs: [{ l: 'en', t: ep.outro }, { l: 'es', t: ep.outroEs }] });
+  return st;
+}
+async function playStep(step, si){
+  const parts = parse(step.big);
+  $('#sentence').innerHTML = parts.map(p => p.c ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('');
+  $('#esLine').textContent = step.small;
+  renderDots(si); setPass(1);
+  for (const g of step.segs){
+    setPill(g.l === 'es' ? 'Español' : 'English', 'speak');
+    if (g.l === 'es') await say(g.t, 'es');
+    else if (g.emph) await sayEnglish(parse(g.t), 'emph');
+    else if (g.slow) await sayEnglish([{ t: g.t, c: false }], 'slow');
+    else await say(g.t, 'en');
+    if (halted()) return;
+    await sleep(300);
+  }
+  await sleep(300);
+}
+async function runPodcast(ei){
+  if (running) return;
+  running = true; paused = false; setPauseUI(); kind = 'podcast'; curCatId = null; progWord = 'Part'; const tok = ++sess;
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
+  show('live'); setPill('Starting…'); $('#liveCat').hidden = true;
+  try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => {}); } catch {}
+  while (running && tok === sess){
+    const ep = PODCAST[ei], steps = podSteps(ep);
+    curTotal = steps.length; $('#liveLesson').textContent = 'Episode ' + (ei + 1) + ' of ' + PODCAST.length;
+    for (let si = 0; si < steps.length && running; si++) await stepWrap(() => playStep(steps[si], si));
+    if (!running) break;
+    renderDots(0, true);
+    if (!S.settings.keep || ei + 1 >= PODCAST.length) break;
+    ei++; setPill('Next episode in a moment', 'speak');
+    for (let i = 0; i < 30 && running; i++){ await sleep(100); while (paused && running) await sleep(150); }
+  }
+  if (running && tok === sess) stopSession('back');
+}
 function openCat(id){
   const c = byId(id), f = fin(id), fo = firstOpen(c);
   $('#catName').textContent = c.icon + ' ' + c.name; $('#catEs').textContent = c.es;
@@ -404,14 +488,17 @@ function openCat(id){
 }
 
 /* ---------- wiring ---------- */
+$('#remix').onclick = () => { buildRemix(); runSession('remix', 0); };
+$('#podcast').onclick = () => openPodcast();
 $('#map').onclick = e => { const b = e.target.closest('.stop'); if (b && !b.disabled) openCat(b.dataset.id); };
-$('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (b && !b.disabled) runSession($('#lessonList').dataset.id, Number(b.dataset.i)); };
+$('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (!b || b.disabled) return; const id = $('#lessonList').dataset.id; if (id === 'podcast') runPodcast(Number(b.dataset.i)); else runSession(id, Number(b.dataset.i)); };
 $('#backHome').onclick = () => { show('home'); renderHome(); };
-$('#liveCat').onchange = e => { const c = byId(e.target.value), fo = firstOpen(c); switchReq = { id: c.id, li: fo >= 0 ? fo : 0 }; paused = false; setPauseUI(); interrupt(); };
+$('#liveCat').onchange = e => { if (e.target.value === 'remix') return; const c = byId(e.target.value), fo = firstOpen(c); switchReq = { id: c.id, li: fo >= 0 ? fo : 0 }; paused = false; setPauseUI(); interrupt(); };
 function setPauseUI(){ $('#pause').textContent = paused ? 'Resume' : 'Pause'; }
 $('#pause').onclick = () => { paused = !paused; setPauseUI(); if (paused){ repeatReq = true; interrupt(); setPill('Paused', ''); } };
-$('#stop').onclick = stopSession;
-$('#liveHome').onclick = stopSession;
+$('#stop').onclick = () => stopSession('back');
+$('#liveBack').onclick = () => stopSession('back');
+$('#liveHome').onclick = () => stopSession('home');
 $('#skip').onclick = () => { skipReq = true; interrupt(); };
 $('#repeat').onclick = () => { repeatReq = true; interrupt(); };
 $('#es').checked = S.settings.es; $('#es').onchange = e => { S.settings.es = e.target.checked; save(); };
