@@ -21,6 +21,7 @@
   .stat small{display:block;color:var(--muted);font-weight:500;font-size:13px}
   .today{background:linear-gradient(180deg,#1a3a40,#17313a);border:1px solid #2c6b6b;border-radius:20px;padding:18px;margin-top:14px}
   .today .lab{color:var(--accent);font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+  .today select{display:block;width:100%;max-width:none;margin:8px 0 4px;font-size:19px;font-weight:800;padding:12px;border-radius:12px;background:#10202c;color:var(--text);border:1px solid #2c6b6b}
   .today .what{font-size:24px;font-weight:800;margin:6px 0 2px;line-height:1.2}
   .today .es{color:var(--muted);margin-bottom:14px}
   .big{width:100%;padding:20px;border:0;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-size:23px;font-weight:800}
@@ -109,6 +110,7 @@
     </div>
     <div class="today">
       <div class="lab">Today's lesson</div>
+      <select id="todayCat" aria-label="Category"></select>
       <div class="what" id="todayWhat"></div>
       <div class="es" id="todayEs"></div>
       <button class="big" id="startToday">Start</button>
@@ -322,7 +324,7 @@ function nextAfter(cat, li){
 
 async function runSession(id, li){
   if (running) return;
-  running = true; paused = false; setPauseUI();
+  running = true; paused = false; setPauseUI(); pickedId = null;
   // iOS only allows audio/speech started synchronously inside the tap, so do this BEFORE any await
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
   show('live'); setPill('Starting…');
@@ -345,7 +347,9 @@ function stopSession(){
 }
 
 /* ---------- today's suggestion ---------- */
+let pickedId = null;
 function suggest(avoidId){
+  if (pickedId && byId(pickedId) && byId(pickedId).lessons.length){ const c = byId(pickedId), d = S.done[c.id] || 0; return { cat: c, li: d < c.lessons.length ? d : 0 }; }
   const cats = playable();
   const open = cats.filter(c => (S.done[c.id] || 0) < c.lessons.length);
   const pool = open.length ? open : cats;
@@ -372,7 +376,8 @@ function renderHome(){
   $('#stStreak').textContent = streakOk ? S.streak.n : 0; $('#stStars').textContent = S.stars;
   $('#stDone').textContent = doneL; $('#stTotal').textContent = totalL;
   const sg = suggest();
-  $('#todayWhat').textContent = sg.cat.icon + ' ' + sg.cat.name + ': ' + sg.cat.lessons[sg.li].t;
+  $('#todayCat').innerHTML = cats.map(c => '<option value="' + c.id + '"' + (c.id === sg.cat.id ? ' selected' : '') + '>' + esc(c.icon + ' ' + c.name) + '</option>').join('');
+  $('#todayWhat').textContent = 'Lesson ' + (sg.li + 1) + ': ' + sg.cat.lessons[sg.li].t;
   $('#todayEs').textContent = sg.cat.es + ' · ' + sg.cat.lessons[sg.li].es;
   $('#startToday').onclick = () => runSession(sg.cat.id, sg.li);
   $('#map').innerHTML = CATEGORIES.map(c => {
@@ -396,6 +401,7 @@ function openCat(id){
 }
 
 /* ---------- wiring ---------- */
+$('#todayCat').onchange = e => { pickedId = e.target.value; renderHome(); };
 $('#map').onclick = e => { const b = e.target.closest('.stop'); if (b && !b.disabled) openCat(b.dataset.id); };
 $('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (b && !b.disabled) runSession($('#lessonList').dataset.id, Number(b.dataset.i)); };
 $('#backHome').onclick = () => { show('home'); renderHome(); };
