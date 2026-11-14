@@ -59,8 +59,8 @@
   .lessonrow .t{font-size:18px;font-weight:700}
   .lessonrow .e{font-size:14px;color:var(--muted)}
 
-  #live{display:flex;flex-direction:column;min-height:calc(100dvh - 40px)}
-  .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:var(--muted);font-size:15px}
+  #live{display:flex;flex-direction:column;min-height:calc(100dvh - 120px)}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--muted);font-size:15px}
   .pill{align-self:flex-start;padding:8px 14px;border-radius:999px;font-weight:800;font-size:17px;background:var(--card);border:1px solid var(--line);margin-top:10px}
   .pill.speak{background:#1e3a5f;border-color:#2f5d94}
   .pill.listen{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);animation:pulse 1.2s infinite}
@@ -77,7 +77,8 @@
   .speed{display:grid;grid-template-columns:72px 1fr 72px;gap:10px;align-items:center;margin-top:18px;text-align:center;color:var(--muted);font-size:17px}
   .speed .ghost{font-size:30px;padding:10px 0;line-height:1}
   .speed b{color:var(--text);font-size:20px}
-  .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
+  .controls .ghost{padding:14px 6px}
   .pausebtn{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:22px;padding:20px 10px}
   .stopbtn{border-color:#7f3b3b;color:#f87171}
   .pop{animation:pop .5s ease-out}
@@ -128,7 +129,7 @@
 
   <!-- LIVE LESSON -->
   <section id="live" hidden>
-    <div class="top"><span id="liveCat"></span><span id="liveLesson"></span></div>
+    <div class="top"><button class="back" id="liveHome">‹ Home</button><span id="liveCat"></span><span id="liveLesson"></span></div>
     <div class="pill" id="pill">Ready</div>
     <div class="passes" id="passes"><span></span><span></span><span></span></div>
     <div class="sentence" id="sentence"></div>
@@ -401,6 +402,7 @@ $('#backHome').onclick = () => { show('home'); renderHome(); };
 function setPauseUI(){ $('#pause').textContent = paused ? 'Resume' : 'Pause'; }
 $('#pause').onclick = () => { paused = !paused; setPauseUI(); if (paused){ repeatReq = true; interrupt(); setPill('Paused', ''); } };
 $('#stop').onclick = stopSession;
+$('#liveHome').onclick = stopSession;
 $('#skip').onclick = () => { skipReq = true; interrupt(); };
 $('#repeat').onclick = () => { repeatReq = true; interrupt(); };
 $('#es').checked = S.settings.es; $('#es').onchange = e => { S.settings.es = e.target.checked; save(); };
