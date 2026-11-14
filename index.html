@@ -86,7 +86,7 @@
   <!-- HOME -->
   <section id="home">
     <h1>English Road Trip</h1>
-    <p class="sub">Practice in the car. Hear it, say it, win stars.</p>
+    <p class="sub">Practice in the car. Hear it, say it along, win stars.</p>
     <div class="stats">
       <div class="stat"><span id="stStreak">0</span> days<small>in a row</small></div>
       <div class="stat">⭐ <span id="stStars">0</span><small>stars</small></div>
@@ -238,15 +238,6 @@ function sayEnglish(parts, mode){
   return speakSegs(segs, 'en');
 }
 
-async function yourTurn(ms){
-  if (!running) return;
-  setPill('Your turn: say it', 'listen'); beep();
-  const t0 = Date.now();
-  while (!halted() && Date.now() - t0 < ms){ setBar((Date.now() - t0) / ms); await sleep(100); }
-  setBar(0);
-}
-const turnMs = text => Math.max(4000, text.split(/\s+/).length * 650 + 1500);
-
 /* ---------- lesson playback ---------- */
 async function stepWrap(fn){
   while (running){
@@ -265,17 +256,18 @@ async function playSentence(cat, li, si){
   $('#sentence').innerHTML = parts.map(p => p.c ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('');
   $('#esLine').textContent = es;
   renderDots(si);
+  // 1) Spanish, natural  2) English, connectors stressed  3) English, natural conversation. No silent gaps.
   if (S.settings.es){
-    setPass(0); setPill('Escucha', 'speak'); setBar(0);
+    setPass(1); setPill('Español', 'speak'); setBar(0);
     await say(es, 'es'); if (halted()) return;
-    await sleep(350);
+    await sleep(250);
   }
-  for (let pass = 1; pass <= 3; pass++){
-    setPass(pass); setPill('Listen', 'speak'); setBar(0);
-    await sayEnglish(parts, pass === 1 ? 'slow' : pass === 2 ? 'emph' : 'plain'); if (halted()) return;
-    await sleep(150);
-    await yourTurn(turnMs(text)); if (halted()) return;
-  }
+  setPass(2); setPill('English: stress the connectors', 'speak');
+  await sayEnglish(parts, 'emph'); if (halted()) return;
+  await sleep(250);
+  setPass(3); setPill('English: natural speed', 'speak');
+  await sayEnglish(parts, 'plain'); if (halted()) return;
+  await sleep(500);
 }
 
 function renderDots(cur, all){
@@ -299,7 +291,7 @@ async function playLesson(cat, li){
   $('#sentence').textContent = lesson.t; $('#esLine').textContent = lesson.es; renderDots(-1); setPass(0);
   await stepWrap(async () => {
     await say('Lesson ' + (li + 1) + '. ' + lesson.t + '.'); if (halted()) return;
-    if (li === 0 && !(S.done[cat.id])){ await say('You will hear each sentence in Spanish, then in English three times. Say it out loud with me.'); }
+    if (li === 0 && !(S.done[cat.id])){ await say('You will hear each sentence in Spanish, then in English with the connecting words stressed, then the way we say it in a natural conversation. Say it along with me.'); }
   });
   for (let si = 0; si < lesson.s.length && running; si++) await stepWrap(() => playSentence(cat, li, si));
   if (!running) return;
