@@ -118,6 +118,7 @@
       <div class="row"><label for="vEn">English voice</label><select id="vEn"></select></div>
       <div class="row"><label for="vEs">Spanish voice</label><select id="vEs"></select></div>
       <p class="note" id="voiceInfo"></p>
+      <p class="note">App version: <b id="ver">v14</b></p>
       <button class="link" id="reset">Reset my progress</button>
     </details>
     <div class="stats">
@@ -280,24 +281,43 @@ function speakSegs(segs, lang){
   return new Promise(res => {
     if (!running || !synth || !segs.length) return res();
     setPill('Listen', 'speak');
-    let n = 0, done = false, guard = null;
+    let n = 0, done = false, guard = null, watch = null, started = false, tries = 0, gen = 0;
     const total = segs.reduce((a, s) => a + s.text.length, 0);
-    const fin = () => { if (!done){ done = true; clearTimeout(guard); if (pendingFin === fin) pendingFin = null; res(); } };
+    const fin = () => { if (!done){ done = true; clearTimeout(guard); clearTimeout(watch); if (pendingFin === fin) pendingFin = null; res(); } };
     pendingFin = fin;
-    const go = () => {
+    const speakAll = () => {
       if (done) return;
       if (halted()) return fin();
-      guard = setTimeout(fin, 2500 + total * 110 / S.settings.rate);
-      segs.forEach(s => {
+      const g = ++gen; n = 0; started = false;
+      segs.forEach((s, i) => {
         const u = makeUtt(s.text, lang, s.rate);
         if (s.pitch) u.pitch = s.pitch;
         if (s.volume != null) u.volume = s.volume;
-        u.onend = u.onerror = () => { if (++n >= segs.length) fin(); };
+        if (i === 0) u.onstart = () => { if (g === gen) started = true; };
+        u.onend = u.onerror = () => { if (g !== gen) return; started = true; if (++n >= segs.length) fin(); };
         synth.speak(u);
       });
+      // iOS sometimes swallows speech that starts right after cancel(): if nothing started, cancel and try again
+      clearTimeout(watch);
+      watch = setTimeout(() => {
+        if (done || started || halted()) return;
+        if (++tries > 2) return;
+        gen++; try { synth.cancel(); } catch {} lastCancel = Date.now();
+        setTimeout(speakAll, 600);
+      }, 1100);
     };
-    const wait = 160 - (Date.now() - lastCancel);   // iOS drops speech that starts right after cancel()
-    if (wait > 0) setTimeout(go, wait); else go();
+    const t0 = Date.now();
+    const start = () => {
+      if (done) return;
+      if (halted()) return fin();
+      const recent = Date.now() - lastCancel < 1500;
+      const idle = !(synth.speaking || synth.pending);
+      if (!recent || (idle && Date.now() - lastCancel >= 450) || Date.now() - t0 > 1300){
+        guard = setTimeout(fin, 3000 + total * 110 / S.settings.rate);
+        speakAll();
+      } else setTimeout(start, 50);
+    };
+    start();
   });
 }
 const say = (text, lang = 'en') => speakSegs([{ text, rate: lang === 'es' ? Math.min(S.settings.rate, 0.95) : S.settings.rate }], lang);
