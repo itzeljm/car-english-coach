@@ -54,7 +54,6 @@
   .lessonrow .n{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:#10202c;border:2px solid var(--line)}
   .lessonrow.done .n{background:var(--gold);border-color:var(--gold);color:#3a2a00}
   .lessonrow.next .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-  .lessonrow.locked{opacity:.4;cursor:default}
   .lessonrow .t{font-size:18px;font-weight:700}
   .lessonrow .e{font-size:14px;color:var(--muted)}
 
@@ -155,9 +154,12 @@ const KEY = 'cec2';
 const clone = o => JSON.parse(JSON.stringify(o));
 
 /* ---------- saved state ---------- */
-const DEF = { done: {}, last: {}, stars: 0, streak: { n: 0, d: '' }, settings: { rate: 0.9, es: true, keep: true, vEn: '', vEs: '' } };
+const DEF = { done: {}, fin: {}, last: {}, stars: 0, streak: { n: 0, d: '' }, settings: { rate: 0.9, es: true, keep: true, vEn: '', vEs: '' } };
 let S = (() => { try { const x = JSON.parse(localStorage.getItem(KEY)); return x ? { ...DEF, ...x, settings: { ...DEF.settings, ...(x.settings || {}) } } : clone(DEF); } catch { return clone(DEF); } })();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+function fin(id){ if (!S.fin) S.fin = {}; if (!S.fin[id]){ const n = S.done[id] || 0; S.fin[id] = Array.from({ length: n }, (_, i) => i); } return S.fin[id]; }
+const doneCount = id => fin(id).length;
+const firstOpen = c => { const f = fin(c.id); for (let i = 0; i < c.lessons.length; i++) if (!f.includes(i)) return i; return -1; };
 const byId = id => CATEGORIES.find(c => c.id === id);
 const playable = () => CATEGORIES.filter(c => c.lessons.length);
 
@@ -290,7 +292,7 @@ function renderDots(cur, all){ curSi = cur; progDone = !!all; updProg(); }
 function today(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function yesterday(){ const d = new Date(Date.now() - 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function recordComplete(cat, li){
-  if ((S.done[cat.id] || 0) === li) S.done[cat.id] = li + 1;
+  if (!fin(cat.id).includes(li)) fin(cat.id).push(li);
   S.last[cat.id] = Date.now(); S.stars++;
   const t = today();
   if (S.streak.d !== t){ S.streak = { n: S.streak.d === yesterday() ? S.streak.n + 1 : 1, d: t }; }
@@ -304,7 +306,7 @@ async function playLesson(cat, li){
   $('#sentence').textContent = lesson.t; $('#esLine').textContent = lesson.es; renderDots(-1); setPass(0);
   await stepWrap(async () => {
     await say('Lesson ' + (li + 1) + '. ' + lesson.t + '.'); if (halted()) return;
-    if (li === 0 && !(S.done[cat.id])){ await say('You will hear each sentence in Spanish, then in English with the connecting words stressed, then the way we say it in a natural conversation. Say it along with me.'); }
+    if (li === 0 && fin(cat.id).length === 0){ await say('You will hear each sentence in Spanish, then in English with the connecting words stressed, then the way we say it in a natural conversation. Say it along with me.'); }
   });
   for (let si = 0; si < lesson.s.length && running && !switchReq; si++) await stepWrap(() => playSentence(cat, li, si));
   if (!running || switchReq) return;
@@ -319,8 +321,8 @@ async function playLesson(cat, li){
 }
 
 function nextAfter(cat, li){
-  const done = S.done[cat.id] || 0;
-  if (li + 1 < cat.lessons.length && li + 1 <= done) return { id: cat.id, li: li + 1 };
+  const f = fin(cat.id), n = cat.lessons.length;
+  for (let k = 1; k < n; k++){ const j = (li + k) % n; if (!f.includes(j)) return { id: cat.id, li: j }; }
   const s = suggest(cat.id); return { id: s.cat.id, li: s.li };
 }
 
@@ -354,7 +356,7 @@ function stopSession(){
 /* ---------- today's suggestion ---------- */
 function suggest(avoidId){
   const cats = playable();
-  const open = cats.filter(c => (S.done[c.id] || 0) < c.lessons.length);
+  const open = cats.filter(c => doneCount(c.id) < c.lessons.length);
   const pool = open.length ? open : cats;
   const never = pool.filter(c => !S.last[c.id]);
   let pick;
@@ -364,8 +366,8 @@ function suggest(avoidId){
     const list = others.length ? others : pool;
     pick = list.slice().sort((a, b) => (S.last[a.id] || 0) - (S.last[b.id] || 0))[0];
   }
-  const done = S.done[pick.id] || 0;
-  const li = done < pick.lessons.length ? done : Math.floor(Math.random() * pick.lessons.length);
+  const fo = firstOpen(pick);
+  const li = fo >= 0 ? fo : Math.floor(Math.random() * pick.lessons.length);
   return { cat: pick, li };
 }
 
@@ -374,7 +376,7 @@ function show(v){ ['home', 'cat', 'live'].forEach(id => $('#' + id).hidden = id 
 function renderHome(){
   const cats = playable();
   const totalL = cats.reduce((a, c) => a + c.lessons.length, 0);
-  const doneL = cats.reduce((a, c) => a + (S.done[c.id] || 0), 0);
+  const doneL = cats.reduce((a, c) => a + doneCount(c.id), 0);
   const streakOk = S.streak.d === today() || S.streak.d === yesterday();
   $('#stStreak').textContent = streakOk ? S.streak.n : 0; $('#stStars').textContent = S.stars;
   $('#stDone').textContent = doneL; $('#stTotal').textContent = totalL;
@@ -383,19 +385,19 @@ function renderHome(){
   $('#todayEs').textContent = sg.cat.es + ' · ' + sg.cat.lessons[sg.li].es;
   $('#startToday').onclick = () => runSession(sg.cat.id, sg.li);
   $('#map').innerHTML = CATEGORIES.map(c => {
-    const n = c.lessons.length, d = S.done[c.id] || 0;
+    const n = c.lessons.length, d = doneCount(c.id), f = fin(c.id);
     const cls = !n ? 'soon' : d >= n ? 'done' : c.id === sg.cat.id ? 'next' : '';
-    const dots = n ? '<div class="dots">' + c.lessons.map((_, i) => '<span class="dot ' + (i < d ? 'on' : '') + '"></span>').join('') + '</div>' : '';
+    const dots = n ? '<div class="dots">' + c.lessons.map((_, i) => '<span class="dot ' + (f.includes(i) ? 'on' : '') + '"></span>').join('') + '</div>' : '';
     return '<button class="stop ' + cls + '" data-id="' + c.id + '"' + (n ? '' : ' disabled') + '>' +
       '<span class="ic">' + (d >= n && n ? '⭐' : c.icon) + '</span><div class="nm">' + esc(c.name) + '</div><div class="ss">' + esc(c.es) + '</div>' + (n ? dots : '<div class="ss">Coming soon</div>') + '</button>';
   }).join('');
 }
 function openCat(id){
-  const c = byId(id), done = S.done[id] || 0;
+  const c = byId(id), f = fin(id), fo = firstOpen(c);
   $('#catName').textContent = c.icon + ' ' + c.name; $('#catEs').textContent = c.es;
   $('#lessonList').innerHTML = c.lessons.map((l, i) => {
-    const st = i < done ? 'done' : i === done ? 'next' : 'locked';
-    return '<button class="lessonrow ' + st + '" data-i="' + i + '"' + (st === 'locked' ? ' disabled' : '') + '><span class="n">' + (st === 'done' ? '✓' : i + 1) + '</span><span><div class="t">' + esc(l.t) + '</div><div class="e">' + esc(l.es) + '</div></span></button>';
+    const st = f.includes(i) ? 'done' : i === fo ? 'next' : '';
+    return '<button class="lessonrow ' + st + '" data-i="' + i + '"><span class="n">' + (st === 'done' ? '✓' : i + 1) + '</span><span><div class="t">' + esc(l.t) + '</div><div class="e">' + esc(l.es) + '</div></span></button>';
   }).join('');
   $('#lessonList').dataset.id = id;
   show('cat');
@@ -405,7 +407,7 @@ function openCat(id){
 $('#map').onclick = e => { const b = e.target.closest('.stop'); if (b && !b.disabled) openCat(b.dataset.id); };
 $('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (b && !b.disabled) runSession($('#lessonList').dataset.id, Number(b.dataset.i)); };
 $('#backHome').onclick = () => { show('home'); renderHome(); };
-$('#liveCat').onchange = e => { const c = byId(e.target.value), d = S.done[c.id] || 0; switchReq = { id: c.id, li: d < c.lessons.length ? d : 0 }; paused = false; setPauseUI(); interrupt(); };
+$('#liveCat').onchange = e => { const c = byId(e.target.value), fo = firstOpen(c); switchReq = { id: c.id, li: fo >= 0 ? fo : 0 }; paused = false; setPauseUI(); interrupt(); };
 function setPauseUI(){ $('#pause').textContent = paused ? 'Resume' : 'Pause'; }
 $('#pause').onclick = () => { paused = !paused; setPauseUI(); if (paused){ repeatReq = true; interrupt(); setPill('Paused', ''); } };
 $('#stop').onclick = stopSession;
