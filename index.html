@@ -41,7 +41,7 @@
   .dot.cur{border-color:var(--accent);background:var(--accent)}
   .stop.soon{opacity:.45;cursor:default}
   .note{color:var(--muted);font-size:14px;line-height:1.45;margin:10px 0 0}
-  details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:18px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:12px 0 4px}
   summary{font-weight:700;font-size:17px}
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 0}
   .row label{font-size:16px}
@@ -88,6 +88,16 @@
   <section id="home">
     <h1>English Road Trip</h1>
     <p class="sub">Practice in the car. Hear it, say it along, win stars.</p>
+    <details>
+      <summary>Settings</summary>
+      <div class="row"><label for="es">Say the Spanish out loud</label><input type="checkbox" id="es"></div>
+      <div class="row"><label for="keep">Keep going after each lesson</label><input type="checkbox" id="keep"></div>
+      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05"></div>
+      <div class="row"><label for="vEn">English voice</label><select id="vEn"></select></div>
+      <div class="row"><label for="vEs">Spanish voice</label><select id="vEs"></select></div>
+      <p class="note" id="voiceInfo"></p>
+      <button class="link" id="reset">Reset my progress</button>
+    </details>
     <div class="stats">
       <div class="stat"><span id="stStreak">0</span> days<small>in a row</small></div>
       <div class="stat">⭐ <span id="stStars">0</span><small>stars</small></div>
@@ -102,16 +112,6 @@
     <div class="banner" id="voiceBanner" hidden></div>
     <h2>Or choose a stop on your trip</h2>
     <div class="map" id="map"></div>
-    <details>
-      <summary>Settings</summary>
-      <div class="row"><label for="es">Say the Spanish out loud</label><input type="checkbox" id="es"></div>
-      <div class="row"><label for="keep">Keep going after each lesson</label><input type="checkbox" id="keep"></div>
-      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05"></div>
-      <div class="row"><label for="vEn">English voice</label><select id="vEn"></select></div>
-      <div class="row"><label for="vEs">Spanish voice</label><select id="vEs"></select></div>
-      <p class="note" id="voiceInfo"></p>
-      <button class="link" id="reset">Reset my progress</button>
-    </details>
     <p class="note">Tap Start before you drive (or ask a passenger), then keep this page open with the screen on. After that, it's all voice. Everything is saved on this phone only.</p>
   </section>
 
