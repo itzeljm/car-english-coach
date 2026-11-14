@@ -154,13 +154,307 @@ const CATEGORIES = [
   ])
 ]},
 
-/* Batch 2 categories are added below. */
-{ id: 'restaurants', icon: '🍽️', name: 'Restaurants', es: 'Restaurantes', stop: 'Olvera Street', lessons: [] },
-{ id: 'shopping', icon: '🛍️', name: 'Shopping', es: 'De compras', stop: 'The Grove', lessons: [] },
-{ id: 'phone', icon: '📞', name: 'Phone Calls and Appointments', es: 'Llamadas y citas', stop: 'Hollywood Sign', lessons: [] },
-{ id: 'home', icon: '👨‍👦‍👦', name: 'My Sons and Home', es: 'Mis hijos y la casa', stop: 'Dodger Stadium', lessons: [] },
-{ id: 'bills', icon: '🧾', name: 'Bills and Banking', es: 'Cuentas y banco', stop: 'Union Station', lessons: [] },
-{ id: 'transport', icon: '🚌', name: 'Getting Around', es: 'Moverme por la ciudad', stop: 'Malibu', lessons: [] },
-{ id: 'social', icon: '💬', name: 'Small Talk and Friends', es: 'Plática y amistades', stop: 'Rodeo Drive', lessons: [] },
-{ id: 'gov', icon: '📄', name: 'Government and Paperwork', es: 'Trámites y documentos', stop: 'City Hall', lessons: [] }
+{ id: 'restaurants', icon: '🍽️', name: 'Restaurants', es: 'Restaurantes', stop: 'Olvera Street', lessons: [
+  L('Ordering', 'Pedir la comida', [
+    ["I'd like the chicken soup *with* a side *of* rice, please.", "Quisiera la sopa de pollo con una guarnición de arroz, por favor."],
+    ["We have a table *for* four *at* seven o'clock.", "Tenemos una mesa para cuatro a las siete."],
+    ["Could I have a glass *of* water *with* lemon?", "¿Me podría traer un vaso de agua con limón?"],
+    ["I'm *in* the mood *for* something light *for* lunch.", "Se me antoja algo ligero para el almuerzo."],
+    ["What do you recommend *for* dessert?", "¿Qué me recomienda de postre?"]
+  ]),
+  L('Special requests', 'Peticiones especiales', [
+    ["I'm allergic *to* nuts, so please make it *without* them.", "Soy alérgica a las nueces, así que por favor prepárelo sin ellas."],
+    ["Could you put the sauce *on* the side *instead of* *on* top?", "¿Podría poner la salsa aparte en lugar de encima?"],
+    ["I'm worried *about* the spice level *because of* my stomach.", "Me preocupa lo picante por mi estómago."],
+    ["Can we get the check *within* a few minutes? We have to be *at* the theater *by* eight.", "¿Nos puede traer la cuenta en unos minutos? Tenemos que estar en el teatro a las ocho."],
+    ["Could you pack the leftovers *to* go, *with* extra napkins?", "¿Podría empacar las sobras para llevar, con servilletas extra?"]
+  ]),
+  L('Talking with the server', 'Hablar con el mesero', [
+    ["I came here *in order to* celebrate my son's birthday.", "Vine aquí para celebrar el cumpleaños de mi hijo."],
+    ["Please bring the check *as soon as* we finish dessert.", "Por favor traiga la cuenta en cuanto terminemos el postre."],
+    ["We'd like to sit inside *in case* it rains.", "Preferimos sentarnos adentro por si llueve."],
+    ["I like Mexican dishes, *such as* tacos, tamales, and enchiladas.", "Me gustan los platillos mexicanos, como tacos, tamales y enchiladas."],
+    ["Could we have rice *as well as* beans *with* the meal?", "¿Nos podría dar arroz además de frijoles con la comida?"]
+  ]),
+  L('Problems with the food', 'Problemas con la comida', [
+    ["*Even though* I ordered it medium, the steak is raw.", "Aunque lo pedí término medio, el filete está crudo."],
+    ["*Although* the food is good, the service is very slow.", "Aunque la comida es buena, el servicio es muy lento."],
+    ["*In spite of* waiting forty minutes, we still have no drinks.", "A pesar de esperar cuarenta minutos, todavía no tenemos las bebidas."],
+    ["We can wait *as long as* the soup arrives hot.", "Podemos esperar siempre y cuando la sopa llegue caliente."],
+    ["I don't know *whether* this dish has meat *or* not.", "No sé si este platillo tiene carne o no."]
+  ]),
+  L('The bill and leaving', 'La cuenta y despedirse', [
+    ["*According to* the menu, this dish costs fifteen dollars, but the bill says eighteen.", "Según el menú, este platillo cuesta quince dólares, pero la cuenta dice dieciocho."],
+    ["The food was delicious; *on the other hand*, the music was very loud.", "La comida estuvo deliciosa; por otro lado, la música estaba muy fuerte."],
+    ["We were charged twice; *as a result*, we asked *to* speak *with* the manager.", "Nos cobraron dos veces; como resultado, pedimos hablar con el gerente."],
+    ["I'm leaving a tip *so that* the server knows we appreciated the service.", "Voy a dejar propina para que el mesero sepa que apreciamos el servicio."],
+    ["*In the end*, we had a great evening *with* the whole family.", "Al final, pasamos una gran noche con toda la familia."]
+  ])
+]},
+
+{ id: 'shopping', icon: '🛍️', name: 'Shopping', es: 'De compras', stop: 'The Grove', lessons: [
+  L('Finding things', 'Buscar cosas', [
+    ["Excuse me, where is the section *for* shoes *on* this floor?", "Disculpe, ¿dónde está la sección de zapatos en este piso?"],
+    ["I'm looking *for* a jacket *in* a medium size.", "Busco una chamarra en talla mediana."],
+    ["Do you have this shirt *in* blue or *in* black?", "¿Tiene esta camisa en azul o en negro?"],
+    ["The fitting room is *at* the back *of* the store.", "El probador está al fondo de la tienda."],
+    ["I'm shopping *for* a gift *for* my son.", "Estoy buscando un regalo para mi hijo."]
+  ]),
+  L('Sizes and prices', 'Tallas y precios', [
+    ["This dress is too small *for* me; do you have a bigger one?", "Este vestido me queda muy chico; ¿tiene uno más grande?"],
+    ["How much is it *with* tax and *without* the discount?", "¿Cuánto cuesta con impuestos y sin el descuento?"],
+    ["The shoes are expensive *because of* the brand name.", "Los zapatos son caros por la marca."],
+    ["*Instead of* the red one, I'd like the green one *with* pockets.", "En lugar del rojo, quiero el verde con bolsas."],
+    ["The sale ends *within* the week, so I need to decide *by* Friday.", "La oferta termina dentro de la semana, así que tengo que decidir para el viernes."]
+  ]),
+  L('Asking for help', 'Pedir ayuda', [
+    ["I came *in order to* exchange these shoes *for* a bigger size.", "Vine para cambiar estos zapatos por una talla más grande."],
+    ["Please call me *as soon as* the blue sweater arrives.", "Por favor llámeme en cuanto llegue el suéter azul."],
+    ["I'll keep the receipt *in case* I need to return it.", "Guardaré el recibo por si necesito devolverlo."],
+    ["I need some things *for* the kitchen, *such as* plates, cups, and pans.", "Necesito algunas cosas para la cocina, como platos, tazas y sartenes."],
+    ["Do you sell towels *as well as* sheets and blankets?", "¿Venden toallas además de sábanas y cobijas?"]
+  ]),
+  L('Returns and problems', 'Devoluciones y problemas', [
+    ["*Even though* I kept the tag, they wouldn't take it back.", "Aunque conservé la etiqueta, no quisieron aceptar la devolución."],
+    ["*Although* the coat looks nice, it doesn't fit well.", "Aunque el abrigo se ve bonito, no me queda bien."],
+    ["*In spite of* the discount, it's still too expensive *for* me.", "A pesar del descuento, sigue siendo muy caro para mí."],
+    ["I'll buy it *as long as* I can return it *within* thirty days.", "Lo compraré siempre y cuando pueda devolverlo dentro de treinta días."],
+    ["I can't return it *unless* I have the original receipt.", "No puedo devolverlo a menos que tenga el recibo original."]
+  ]),
+  L('Deals and decisions', 'Ofertas y decisiones', [
+    ["*According to* the sign, everything is fifty percent off, but this item is not included.", "Según el letrero, todo tiene cincuenta por ciento de descuento, pero este artículo no está incluido."],
+    ["I like the red one; *on the other hand*, the black one matches everything.", "Me gusta el rojo; por otro lado, el negro combina con todo."],
+    ["The price went up; *as a result*, I decided to wait *for* the next sale.", "El precio subió; como resultado, decidí esperar la próxima oferta."],
+    ["I'm saving money *so that* I can buy a new couch *for* the living room.", "Estoy ahorrando para poder comprar un sillón nuevo para la sala."],
+    ["*In the end*, I bought both *because of* the great deal.", "Al final, compré los dos por la gran oferta."]
+  ])
+]},
+
+{ id: 'phone', icon: '📞', name: 'Phone Calls and Appointments', es: 'Llamadas y citas', stop: 'Hollywood Sign', lessons: [
+  L('Starting the call', 'Empezar la llamada', [
+    ["Hello, I'm calling *about* an appointment *for* next Monday.", "Hola, llamo por una cita para el próximo lunes."],
+    ["Could I speak *to* someone *in* the billing department?", "¿Podría hablar con alguien del departamento de facturación?"],
+    ["This is Maria Lopez, calling *from* Los Angeles.", "Habla María López, llamo desde Los Ángeles."],
+    ["I'm returning a call *from* your office *about* my account.", "Estoy devolviendo una llamada de su oficina sobre mi cuenta."],
+    ["Could you please repeat that *for* me, a little slower?", "¿Podría repetirlo para mí, por favor, un poco más despacio?"]
+  ]),
+  L('Scheduling', 'Programar citas', [
+    ["I'm available *on* Tuesday *in* the afternoon, *after* two o'clock.", "Estoy disponible el martes por la tarde, después de las dos."],
+    ["Could we move my appointment *from* Friday *to* Monday?", "¿Podríamos cambiar mi cita del viernes al lunes?"],
+    ["I need to cancel *because of* a work schedule change.", "Necesito cancelar por un cambio en mi horario de trabajo."],
+    ["Is there anything *within* the next two weeks, *instead of* next month?", "¿Hay algo dentro de las próximas dos semanas, en lugar del próximo mes?"],
+    ["I'll be there *by* nine, *with* all my documents.", "Estaré ahí para las nueve, con todos mis documentos."]
+  ]),
+  L('Leaving messages', 'Dejar mensajes', [
+    ["I'm calling *in order to* confirm my appointment *for* tomorrow.", "Llamo para confirmar mi cita de mañana."],
+    ["Please call me back *as soon as* you get this message.", "Por favor devuélvame la llamada en cuanto reciba este mensaje."],
+    ["I'll try again later *in case* you didn't get my first message.", "Intentaré de nuevo más tarde por si no recibió mi primer mensaje."],
+    ["You can reach me at different times, *such as* mornings and evenings.", "Puede localizarme a diferentes horas, como por la mañana y por la tarde."],
+    ["You can call me *at* this number, *as well as* send an email.", "Puede llamarme a este número, además de enviar un correo."]
+  ]),
+  L('Holds and problems', 'Esperas y problemas', [
+    ["*Even though* I've called three times, nobody has called me back.", "Aunque he llamado tres veces, nadie me ha devuelto la llamada."],
+    ["*Although* I was on hold for an hour, I didn't hang up.", "Aunque estuve en espera una hora, no colgué."],
+    ["*In spite of* the long wait, the agent was very kind.", "A pesar de la larga espera, la agente fue muy amable."],
+    ["I'll hold *as long as* you can help me today.", "Esperaré en la línea siempre y cuando me pueda ayudar hoy."],
+    ["I'm not sure *whether* I called the right department *or* not.", "No estoy segura de si llamé al departamento correcto o no."]
+  ]),
+  L('Following up', 'Dar seguimiento', [
+    ["*According to* your email, someone would call me *within* two days.", "Según su correo, alguien me llamaría dentro de dos días."],
+    ["I sent the form yesterday; *as a result*, I'm waiting *for* a confirmation.", "Envié el formulario ayer; como resultado, estoy esperando una confirmación."],
+    ["The first agent was helpful; *on the other hand*, the second one didn't know anything.", "La primera agente fue útil; por otro lado, la segunda no sabía nada."],
+    ["I'm following up *so that* nothing gets lost *in* the process.", "Estoy dando seguimiento para que nada se pierda en el proceso."],
+    ["*In the end*, I solved the problem *with* a simple phone call.", "Al final, resolví el problema con una simple llamada."]
+  ])
+]},
+
+{ id: 'home', icon: '👨‍👦‍👦', name: 'My Sons and Home', es: 'Mis hijos y la casa', stop: 'Dodger Stadium', lessons: [
+  L('Daily life', 'La vida diaria', [
+    ["Dinner will be ready *at* six, *with* rice and beans.", "La cena estará lista a las seis, con arroz y frijoles."],
+    ["Please put your clothes *in* the basket *by* the door.", "Por favor pongan su ropa en el cesto que está junto a la puerta."],
+    ["I'm proud *of* both *of* my sons.", "Estoy orgullosa de mis dos hijos."],
+    ["Are you coming home *for* dinner, or are you going out *with* friends?", "¿Vienes a casa a cenar o vas a salir con tus amigos?"],
+    ["I'm worried *about* you driving *at* night.", "Me preocupa que manejes de noche."]
+  ]),
+  L('Chores and plans', 'Quehaceres y planes', [
+    ["I need help *with* the groceries *from* the car.", "Necesito ayuda con las compras del carro."],
+    ["*Instead of* watching TV, can you help me *with* the dishes?", "En lugar de ver la tele, ¿me ayudas con los platos?"],
+    ["We can't go out *because of* the rain *on* Saturday.", "No podemos salir por la lluvia del sábado."],
+    ["Please finish the laundry *within* the hour *so that* we can eat.", "Por favor termina la ropa en una hora para que podamos comer."],
+    ["I'm thinking *about* a trip *to* Mexico *with* the whole family.", "Estoy pensando en un viaje a México con toda la familia."]
+  ]),
+  L('Helping and advising', 'Ayudar y aconsejar', [
+    ["I'm telling you this *in order to* help you.", "Te lo digo para ayudarte."],
+    ["Call me *as soon as* you arrive safely.", "Llámame en cuanto llegues con bien."],
+    ["Take a jacket *in case* it gets cold tonight.", "Lleva una chamarra por si hace frío esta noche."],
+    ["You should save money *for* things *such as* rent, insurance, and car repairs.", "Deberías ahorrar para cosas como la renta, el seguro y las reparaciones del carro."],
+    ["I'll cook dinner *as well as* pack your lunch.", "Voy a cocinar la cena, además de empacarte el almuerzo."]
+  ]),
+  L('Disagreements', 'Desacuerdos', [
+    ["*Even though* I'm tired, I'll listen *to* you.", "Aunque estoy cansada, te voy a escuchar."],
+    ["*Although* I don't agree *with* you, I respect your decision.", "Aunque no estoy de acuerdo contigo, respeto tu decisión."],
+    ["*In spite of* our differences, we love each other.", "A pesar de nuestras diferencias, nos queremos."],
+    ["You can go out *as long as* you call me when you arrive.", "Puedes salir siempre y cuando me llames cuando llegues."],
+    ["I don't know *whether* you're ready *for* this *or* not.", "No sé si estás listo para esto o no."]
+  ]),
+  L('Big conversations', 'Conversaciones importantes', [
+    ["*According to* the doctor, you need to rest *for* a few days.", "Según el doctor, necesitas descansar unos días."],
+    ["I like that you're independent; *on the other hand*, I miss cooking *for* you.", "Me gusta que seas independiente; por otro lado, extraño cocinar para ti."],
+    ["You worked hard; *as a result*, you got the job.", "Trabajaste duro; como resultado, conseguiste el trabajo."],
+    ["I'm saying this *so that* you know I'm always here *for* you.", "Te digo esto para que sepas que siempre estoy aquí para ti."],
+    ["*In the end*, the most important thing is being *with* family.", "Al final, lo más importante es estar con la familia."]
+  ])
+]},
+
+{ id: 'bills', icon: '🧾', name: 'Bills and Banking', es: 'Cuentas y banco', stop: 'Union Station', lessons: [
+  L('Paying bills', 'Pagar cuentas', [
+    ["My electric bill is due *on* the fifteenth *of* this month.", "Mi recibo de luz vence el quince de este mes."],
+    ["I pay my bills *by* phone or *at* the bank.", "Pago mis cuentas por teléfono o en el banco."],
+    ["Could you send the statement *to* my new address?", "¿Podría enviar el estado de cuenta a mi nueva dirección?"],
+    ["I've been a customer *with* this company *for* five years.", "He sido clienta de esta empresa por cinco años."],
+    ["There is a charge *of* thirty dollars *on* my account.", "Hay un cargo de treinta dólares en mi cuenta."]
+  ]),
+  L('Utilities', 'Servicios', [
+    ["The internet has been down *since* yesterday *in* my building.", "El internet no funciona desde ayer en mi edificio."],
+    ["I'm worried *about* the high bill *because of* the air conditioner.", "Me preocupa el recibo tan alto por el aire acondicionado."],
+    ["*Instead of* paying late, can I set up a payment *with* a later date?", "En lugar de pagar tarde, ¿puedo programar un pago con una fecha posterior?"],
+    ["Could a technician come *within* three days? I'm home *in* the mornings.", "¿Podría venir un técnico dentro de tres días? Estoy en casa por las mañanas."],
+    ["I'd like to ask *about* a discount *for* low-income families.", "Quisiera preguntar por un descuento para familias de bajos ingresos."]
+  ]),
+  L('At the bank', 'En el banco', [
+    ["I'm here *in order to* open a savings account.", "Estoy aquí para abrir una cuenta de ahorros."],
+    ["Please text me *as soon as* the deposit arrives.", "Por favor envíeme un mensaje en cuanto llegue el depósito."],
+    ["I keep some cash at home *in case* of an emergency.", "Guardo algo de efectivo en casa por si hay una emergencia."],
+    ["I pay many things *by* card, *such as* groceries, gas, and medicine.", "Pago muchas cosas con tarjeta, como el súper, la gasolina y las medicinas."],
+    ["I need a new card *as well as* a new PIN.", "Necesito una tarjeta nueva, además de un nuevo NIP."]
+  ]),
+  L('Disputes', 'Disputas', [
+    ["*Even though* I paid *on* time, they charged me a late fee.", "Aunque pagué a tiempo, me cobraron un cargo por pago tardío."],
+    ["*Although* I called twice, the charge is still *on* my account.", "Aunque llamé dos veces, el cargo sigue en mi cuenta."],
+    ["*In spite of* the explanation, I don't understand this fee.", "A pesar de la explicación, no entiendo este cargo."],
+    ["I'll keep the account *as long as* there are no hidden fees.", "Voy a conservar la cuenta siempre y cuando no haya cargos ocultos."],
+    ["I don't know *whether* this charge is mine *or* a mistake.", "No sé si este cargo es mío o es un error."]
+  ]),
+  L('Planning', 'Planear', [
+    ["*According to* my budget, I can save fifty dollars every month.", "Según mi presupuesto, puedo ahorrar cincuenta dólares cada mes."],
+    ["Saving is hard; *on the other hand*, it gives me peace *of* mind.", "Ahorrar es difícil; por otro lado, me da tranquilidad."],
+    ["I paid off the card; *as a result*, my interest went down.", "Pagué la tarjeta; como resultado, bajaron mis intereses."],
+    ["I'm setting up automatic payments *so that* I never forget a due date.", "Estoy programando pagos automáticos para nunca olvidar una fecha de vencimiento."],
+    ["*In the end*, I feel safer *with* a plan *for* my money.", "Al final, me siento más segura con un plan para mi dinero."]
+  ])
+]},
+
+{ id: 'transport', icon: '🚌', name: 'Getting Around', es: 'Moverme por la ciudad', stop: 'Malibu', lessons: [
+  L('Directions', 'Direcciones', [
+    ["Excuse me, how do I get *to* the bus stop *on* Main Street?", "Disculpe, ¿cómo llego a la parada del autobús en la calle Main?"],
+    ["Turn left *at* the corner, *next to* the pharmacy.", "Da vuelta a la izquierda en la esquina, junto a la farmacia."],
+    ["The station is *in* front *of* the big park.", "La estación está enfrente del parque grande."],
+    ["Is this bus going *to* downtown or *to* the airport?", "¿Este autobús va al centro o al aeropuerto?"],
+    ["I'm *on* my way *to* work; I'll be there *in* twenty minutes.", "Voy en camino al trabajo; llegaré en veinte minutos."]
+  ]),
+  L('Parking and the car', 'Estacionamiento y el carro', [
+    ["I parked *in* the garage, *on* the third floor.", "Estacioné en el garaje, en el tercer piso."],
+    ["*Instead of* paying for parking, I took the bus.", "En lugar de pagar el estacionamiento, tomé el autobús."],
+    ["I got a ticket *because of* the street cleaning sign.", "Me pusieron una multa por el letrero de limpieza de calles."],
+    ["Could the mechanic finish *within* two days? I need the car *for* work.", "¿Podría el mecánico terminar dentro de dos días? Necesito el carro para el trabajo."],
+    ["I'm worried *about* the noise *from* the engine.", "Me preocupa el ruido del motor."]
+  ]),
+  L('Bus and rides', 'Autobús y viajes', [
+    ["I take the bus early *in order to* avoid traffic.", "Tomo el autobús temprano para evitar el tráfico."],
+    ["Please text me *as soon as* you're outside.", "Por favor mándame un mensaje en cuanto estés afuera."],
+    ["I always carry a bus pass *in case* my car breaks down.", "Siempre llevo un pase de autobús por si se descompone mi carro."],
+    ["There are many ways to travel, *such as* buses, trains, and rides *with* friends.", "Hay muchas formas de viajar, como autobuses, trenes y viajes con amigos."],
+    ["I need a ride *to* the clinic *as well as* *to* the pharmacy.", "Necesito que me lleven a la clínica, además de a la farmacia."]
+  ]),
+  L('Problems on the road', 'Problemas en el camino', [
+    ["*Even though* I left early, I arrived late.", "Aunque salí temprano, llegué tarde."],
+    ["*Although* the freeway was closed, we found another way.", "Aunque la autopista estaba cerrada, encontramos otro camino."],
+    ["*In spite of* the traffic, I stayed calm.", "A pesar del tráfico, me mantuve tranquila."],
+    ["I can drive *as long as* it's not raining too hard.", "Puedo manejar siempre y cuando no llueva demasiado fuerte."],
+    ["I don't know *whether* the bus runs *on* Sundays *or* not.", "No sé si el autobús pasa los domingos o no."]
+  ]),
+  L('Planning trips', 'Planear viajes', [
+    ["*According to* the app, the bus arrives *in* five minutes.", "Según la aplicación, el autobús llega en cinco minutos."],
+    ["The train is faster; *on the other hand*, the bus is cheaper.", "El tren es más rápido; por otro lado, el autobús es más barato."],
+    ["There was an accident; *as a result*, the whole freeway stopped.", "Hubo un accidente; como resultado, toda la autopista se detuvo."],
+    ["I'm leaving early *so that* I can find parking *near* the clinic.", "Voy a salir temprano para encontrar estacionamiento cerca de la clínica."],
+    ["*In the end*, I arrived *on* time *because of* a shortcut.", "Al final, llegué a tiempo por un atajo."]
+  ])
+]},
+
+{ id: 'social', icon: '💬', name: 'Small Talk and Friends', es: 'Plática y amistades', stop: 'Rodeo Drive', lessons: [
+  L('Small talk', 'Plática', [
+    ["How was your weekend? Did you go anywhere *with* your family?", "¿Cómo estuvo tu fin de semana? ¿Fuiste a algún lado con tu familia?"],
+    ["I'm *from* Mexico, and I've lived *in* Los Angeles *for* many years.", "Soy de México, y he vivido en Los Ángeles por muchos años."],
+    ["I'm interested *in* learning more *about* your culture.", "Me interesa aprender más sobre tu cultura."],
+    ["Thank you *for* inviting me *to* your party.", "Gracias por invitarme a tu fiesta."],
+    ["What do you like to do *on* the weekends?", "¿Qué te gusta hacer los fines de semana?"]
+  ]),
+  L('Neighbors', 'Vecinos', [
+    ["I live *on* the third floor, *next to* the elevator.", "Vivo en el tercer piso, junto al elevador."],
+    ["Could you turn the music down a little *because of* the baby?", "¿Podrías bajarle un poco a la música por el bebé?"],
+    ["*Instead of* complaining, I decided to talk *to* my neighbor.", "En lugar de quejarme, decidí hablar con mi vecino."],
+    ["Could you collect my mail *within* the week? I'll be away.", "¿Podrías recoger mi correo esta semana? Voy a estar fuera."],
+    ["I'm worried *about* the noise *in* the hallway *at* night.", "Me preocupa el ruido en el pasillo por la noche."]
+  ]),
+  L('Making plans', 'Hacer planes', [
+    ["I'm calling *in order to* invite you *to* dinner.", "Llamo para invitarte a cenar."],
+    ["Let me know *as soon as* you decide.", "Avísame en cuanto decidas."],
+    ["Bring a sweater *in case* it gets cold.", "Trae un suéter por si hace frío."],
+    ["We can eat something light, *such as* salad, soup, or fruit.", "Podemos comer algo ligero, como ensalada, sopa o fruta."],
+    ["I'll bring dessert *as well as* drinks.", "Voy a llevar postre, además de bebidas."]
+  ]),
+  L('Opinions', 'Opiniones', [
+    ["*Even though* we think differently, we can still be friends.", "Aunque pensamos distinto, podemos seguir siendo amigas."],
+    ["*Although* I like the idea, I need more time *to* decide.", "Aunque me gusta la idea, necesito más tiempo para decidir."],
+    ["*In spite of* the distance, we talk every week.", "A pesar de la distancia, hablamos cada semana."],
+    ["I'll join you *as long as* we're home *by* ten.", "Te acompaño siempre y cuando regresemos a casa para las diez."],
+    ["I'm not sure *whether* I should say yes *or* no.", "No estoy segura de si debo decir que sí o que no."]
+  ]),
+  L('Conversation skills', 'Habilidades para platicar', [
+    ["*According to* my friend, the restaurant is excellent.", "Según mi amiga, el restaurante es excelente."],
+    ["I enjoy meeting new people; *on the other hand*, I get tired *of* big crowds.", "Disfruto conocer gente nueva; por otro lado, me cansan las multitudes."],
+    ["I practiced a lot; *as a result*, I feel more confident.", "Practiqué mucho; como resultado, me siento más segura."],
+    ["I speak slowly *so that* everyone can understand me.", "Hablo despacio para que todos me entiendan."],
+    ["*In the end*, the best way *to* learn is *to* keep talking.", "Al final, la mejor manera de aprender es seguir hablando."]
+  ])
+]},
+
+{ id: 'gov', icon: '📄', name: 'Government and Paperwork', es: 'Trámites y documentos', stop: 'City Hall', lessons: [
+  L('Offices and forms', 'Oficinas y formularios', [
+    ["I'm here *for* an appointment *at* ten o'clock.", "Vengo a una cita a las diez."],
+    ["Where do I sign, *at* the bottom *of* this page?", "¿Dónde firmo, al final de esta página?"],
+    ["I need a copy *of* my birth certificate *for* the application.", "Necesito una copia de mi acta de nacimiento para la solicitud."],
+    ["I'm applying *for* a new driver's license.", "Estoy solicitando una nueva licencia de manejo."],
+    ["Is this window *for* renewals or new applications?", "¿Esta ventanilla es para renovaciones o para solicitudes nuevas?"]
+  ]),
+  L('Waiting and documents', 'Esperas y documentos', [
+    ["I've been waiting *for* an hour *in* this line.", "He estado esperando una hora en esta fila."],
+    ["*Instead of* coming back tomorrow, can I finish my paperwork today?", "En lugar de regresar mañana, ¿puedo terminar mis papeles hoy?"],
+    ["My form was rejected *because of* a missing signature.", "Rechazaron mi formulario por una firma que faltaba."],
+    ["Will I receive my card *within* two weeks?", "¿Recibiré mi tarjeta dentro de dos semanas?"],
+    ["I'm worried *about* the deadline *for* my application.", "Me preocupa la fecha límite de mi solicitud."]
+  ]),
+  L('Applications', 'Solicitudes', [
+    ["I'm submitting these documents *in order to* renew my license.", "Estoy entregando estos documentos para renovar mi licencia."],
+    ["Please notify me *as soon as* my application is approved.", "Por favor avíseme en cuanto aprueben mi solicitud."],
+    ["I made copies *in case* you need an extra set.", "Hice copias por si necesita un juego extra."],
+    ["I brought several documents, *such as* my passport, a bill, and my lease.", "Traje varios documentos, como mi pasaporte, un recibo y mi contrato de renta."],
+    ["I need a stamp *as well as* a signature *on* this form.", "Necesito un sello además de una firma en este formulario."]
+  ]),
+  L('Problems', 'Problemas', [
+    ["*Even though* I brought everything, they asked *for* another paper.", "Aunque traje todo, me pidieron otro papel."],
+    ["*Although* the office was closed, I found help online.", "Aunque la oficina estaba cerrada, encontré ayuda en línea."],
+    ["*In spite of* my appointment, I waited two hours.", "A pesar de tener cita, esperé dos horas."],
+    ["I can come back tomorrow *as long as* my application stays valid.", "Puedo regresar mañana siempre y cuando mi solicitud siga vigente."],
+    ["I don't know *whether* I need an appointment *or* not.", "No sé si necesito una cita o no."]
+  ]),
+  L('Following up', 'Dar seguimiento', [
+    ["*According to* the website, the office opens *at* eight.", "Según el sitio web, la oficina abre a las ocho."],
+    ["The line is long; *on the other hand*, the staff is very helpful.", "La fila es larga; por otro lado, el personal es muy amable."],
+    ["I submitted everything; *as a result*, I received my card *within* a month.", "Entregué todo; como resultado, recibí mi tarjeta dentro de un mes."],
+    ["I'm keeping copies *so that* I have proof *of* everything.", "Estoy guardando copias para tener prueba de todo."],
+    ["*In the end*, the process was easier *with* the right documents.", "Al final, el trámite fue más fácil con los documentos correctos."]
+  ])
+]}
 ];
