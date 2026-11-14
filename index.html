@@ -46,6 +46,7 @@
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 0}
   .row label{font-size:16px}
   input[type=range]{width:50%}
+  select{max-width:55%;font:inherit;font-size:15px;padding:8px;border-radius:10px;background:var(--bg);color:var(--text);border:1px solid var(--line)}
   input[type=checkbox]{width:26px;height:26px}
   .link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:8px 0}
   .banner{background:#2a2410;border:1px solid #6b5a1a;color:#f3e6b0;border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px;line-height:1.45}
@@ -105,6 +106,8 @@
       <div class="row"><label for="es">Say the Spanish out loud</label><input type="checkbox" id="es"></div>
       <div class="row"><label for="keep">Keep going after each lesson</label><input type="checkbox" id="keep"></div>
       <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05"></div>
+      <div class="row"><label for="vEn">English voice</label><select id="vEn"></select></div>
+      <div class="row"><label for="vEs">Spanish voice</label><select id="vEs"></select></div>
       <p class="note" id="voiceInfo"></p>
       <button class="link" id="reset">Reset my progress</button>
     </details>
@@ -145,7 +148,7 @@ const KEY = 'cec2';
 const clone = o => JSON.parse(JSON.stringify(o));
 
 /* ---------- saved state ---------- */
-const DEF = { done: {}, last: {}, stars: 0, streak: { n: 0, d: '' }, settings: { rate: 0.9, es: true, keep: true } };
+const DEF = { done: {}, last: {}, stars: 0, streak: { n: 0, d: '' }, settings: { rate: 0.9, es: true, keep: true, vEn: '', vEs: '' } };
 let S = (() => { try { const x = JSON.parse(localStorage.getItem(KEY)); return x ? { ...DEF, ...x, settings: { ...DEF.settings, ...(x.settings || {}) } } : clone(DEF); } catch { return clone(DEF); } })();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 const byId = id => CATEGORIES.find(c => c.id === id);
@@ -154,23 +157,30 @@ const playable = () => CATEGORIES.filter(c => c.lessons.length);
 /* ---------- voices (Apple Premium first) ---------- */
 let voiceEn = null, voiceEs = null;
 const rank = v => /premium/i.test(v.name) ? 3 : /enhanced|siri/i.test(v.name) ? 2 : 1;
+const lc = v => v.lang.replace('_', '-').toLowerCase();
 function pickVoices(){
   const vs = synth ? synth.getVoices() : [];
-  const best = (langs, prefer) => {
-    const pool = vs.filter(v => langs.some(l => v.lang.replace('_', '-').toLowerCase().startsWith(l)));
-    const pi = v => { const i = prefer.findIndex(p => v.name.includes(p)); return i < 0 ? 99 : i; };
-    return pool.sort((a, b) => rank(b) - rank(a) || pi(a) - pi(b))[0] || null;
+  const best = (lang, locales, names) => {
+    const pool = vs.filter(v => lc(v).startsWith(lang));
+    const sc = v => { const li = locales.findIndex(x => lc(v).startsWith(x)), ni = names.findIndex(n => v.name.includes(n)); return rank(v) * 100 + (li < 0 ? 0 : 20 - li * 5) + (ni < 0 ? 0 : 10 - ni); };
+    return pool.sort((a, b) => sc(b) - sc(a))[0] || null;
   };
-  voiceEn = best(['en-us'], ['Ava', 'Zoe', 'Evan', 'Samantha', 'Allison']) || best(['en'], []);
-  voiceEs = best(['es-mx'], ['Paulina']) || best(['es-us'], ['Paulina', 'Monica', 'Mónica']) || best(['es'], []);
+  const chosen = (uri, lang, auto) => (uri && vs.find(v => v.voiceURI === uri && lc(v).startsWith(lang))) || auto;
+  voiceEn = chosen(S.settings.vEn, 'en', best('en', ['en-us', 'en-gb'], ['Ava', 'Zoe', 'Evan', 'Samantha', 'Allison']));
+  voiceEs = chosen(S.settings.vEs, 'es', best('es', ['es-mx', 'es-us', 'es-es'], ['Paulina', 'Monica', 'Mónica']));
+  fillSelect('#vEn', vs.filter(v => lc(v).startsWith('en')), S.settings.vEn);
+  fillSelect('#vEs', vs.filter(v => lc(v).startsWith('es')), S.settings.vEs);
   const need = [];
   if (!voiceEn || rank(voiceEn) < 3) need.push('English: Ava (Premium)');
   if (!voiceEs || rank(voiceEs) < 3) need.push('Spanish (Mexico): Paulina (Premium)');
-  const info = 'Voices in use: ' + (voiceEn ? voiceEn.name : 'none') + ' / ' + (voiceEs ? voiceEs.name : 'none') + '.';
-  $('#voiceInfo').textContent = info;
+  $('#voiceInfo').textContent = 'Voices in use: ' + (voiceEn ? voiceEn.name : 'none') + ' / ' + (voiceEs ? voiceEs.name : 'none') + '.';
   const b = $('#voiceBanner');
   if (need.length){ b.hidden = false; b.textContent = 'For a more natural voice, ask for help to download: ' + need.join(' and ') + '. Open iPhone Settings > Accessibility > Spoken Content > Voices.'; }
   else b.hidden = true;
+}
+function fillSelect(sel, list, cur){
+  const el = $(sel);
+  el.innerHTML = '<option value="">Auto (best available)</option>' + list.sort((a, b) => rank(b) - rank(a) || a.name.localeCompare(b.name)).map(v => '<option value="' + esc(v.voiceURI) + '"' + (v.voiceURI === cur ? ' selected' : '') + '>' + esc(v.name + ' (' + v.lang + ')') + '</option>').join('');
 }
 if (synth){ pickVoices(); synth.onvoiceschanged = pickVoices; }
 
@@ -207,7 +217,7 @@ function speakSegs(segs, lang){
     let n = 0, done = false;
     const total = segs.reduce((a, s) => a + s.text.length, 0);
     const fin = () => { if (!done){ done = true; clearTimeout(guard); res(); } };
-    const guard = setTimeout(fin, 3500 + total * 160 / (S.settings.rate * 0.7));
+    const guard = setTimeout(fin, 2500 + total * 110 / S.settings.rate);
     segs.forEach(s => {
       const u = makeUtt(s.text, lang, s.rate);
       if (s.pitch) u.pitch = s.pitch;
@@ -219,14 +229,13 @@ function speakSegs(segs, lang){
 }
 const say = (text, lang = 'en') => speakSegs([{ text, rate: lang === 'es' ? Math.min(S.settings.rate, 0.95) : S.settings.rate }], lang);
 
-// mode: 'slow' (connectors stressed, slow), 'emph' (connectors stressed), 'plain' (natural)
+// mode: 'slow' (one smooth utterance, slower), 'emph' (connectors gently stressed), 'plain' (natural)
 function sayEnglish(parts, mode){
-  const base = S.settings.rate * (mode === 'slow' ? 0.8 : 1);
-  if (mode === 'plain') return speakSegs([{ text: plain(parts).trim(), rate: base }], 'en');
-  const segs = parts.filter(p => /[a-z0-9]/i.test(p.t)).map(p => p.c
-    ? { text: p.t.trim(), rate: base * 0.8, pitch: 1.2, volume: 1 }
-    : { text: p.t.trim().replace(/^[,;.\s]+|[,;\s]+$/g, ''), rate: base, volume: 0.85 });
-  return speakSegs(segs.filter(s => /[a-z0-9]/i.test(s.text)), 'en');
+  const base = S.settings.rate * (mode === 'slow' ? 0.82 : 1);
+  if (mode !== 'emph') return speakSegs([{ text: plain(parts).trim(), rate: base }], 'en');
+  const segs = parts.map(p => ({ text: p.t.trim(), c: p.c })).filter(p => /[a-z0-9]/i.test(p.text))
+    .map(p => p.c ? { text: p.text, rate: base * 0.9, pitch: 1.1 } : { text: p.text.replace(/^[,;.\s]+/, ''), rate: base });
+  return speakSegs(segs, 'en');
 }
 
 async function yourTurn(ms){
@@ -256,10 +265,14 @@ async function playSentence(cat, li, si){
   $('#sentence').innerHTML = parts.map(p => p.c ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('');
   $('#esLine').textContent = es;
   renderDots(si);
+  if (S.settings.es){
+    setPass(0); setPill('Escucha', 'speak'); setBar(0);
+    await say(es, 'es'); if (halted()) return;
+    await sleep(350);
+  }
   for (let pass = 1; pass <= 3; pass++){
     setPass(pass); setPill('Listen', 'speak'); setBar(0);
     await sayEnglish(parts, pass === 1 ? 'slow' : pass === 2 ? 'emph' : 'plain'); if (halted()) return;
-    if (pass === 1 && S.settings.es){ await say(es, 'es'); if (halted()) return; }
     await sleep(150);
     await yourTurn(turnMs(text)); if (halted()) return;
   }
@@ -286,7 +299,7 @@ async function playLesson(cat, li){
   $('#sentence').textContent = lesson.t; $('#esLine').textContent = lesson.es; renderDots(-1); setPass(0);
   await stepWrap(async () => {
     await say('Lesson ' + (li + 1) + '. ' + lesson.t + '.'); if (halted()) return;
-    if (li === 0 && !(S.done[cat.id])){ await say('Listen, then say each sentence out loud. We do it three times.'); }
+    if (li === 0 && !(S.done[cat.id])){ await say('You will hear each sentence in Spanish, then in English three times. Say it out loud with me.'); }
   });
   for (let si = 0; si < lesson.s.length && running; si++) await stepWrap(() => playSentence(cat, li, si));
   if (!running) return;
@@ -312,7 +325,6 @@ async function runSession(id, li){
   // iOS only allows audio/speech started synchronously inside the tap, so do this BEFORE any await
   try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume && audioCtx.resume(); } catch {}
   show('live'); setPill('Starting…');
-  if (synth){ try { synth.cancel(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); } catch {} }
   try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => {}); } catch {}
   while (running){
     const cat = byId(id);
@@ -391,6 +403,8 @@ $('#skip').onclick = () => { skipReq = true; interrupt(); };
 $('#repeat').onclick = () => { repeatReq = true; interrupt(); };
 $('#es').checked = S.settings.es; $('#es').onchange = e => { S.settings.es = e.target.checked; save(); };
 $('#keep').checked = S.settings.keep; $('#keep').onchange = e => { S.settings.keep = e.target.checked; save(); };
+$('#vEn').onchange = e => { S.settings.vEn = e.target.value; save(); pickVoices(); };
+$('#vEs').onchange = e => { S.settings.vEs = e.target.value; save(); pickVoices(); };
 $('#rate').value = S.settings.rate; $('#rate').oninput = e => { S.settings.rate = Number(e.target.value); save(); };
 $('#reset').onclick = () => { if (confirm('Reset all progress?')){ const st = S.settings; S = clone(DEF); S.settings = st; save(); renderHome(); } };
 document.addEventListener('visibilitychange', async () => { if (running && !document.hidden && navigator.wakeLock){ try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } });
