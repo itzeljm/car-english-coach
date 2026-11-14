@@ -30,6 +30,12 @@
   .quick span{font-size:34px;line-height:1}
   .quick b{font-size:17px}
   .quick small{color:var(--muted);font-size:13px;line-height:1.2}
+  .quick .wide{grid-column:1/-1;flex-direction:row;justify-content:center;gap:14px;text-align:left;border-color:var(--line);background:var(--card)}
+  .quick .wide div{display:flex;flex-direction:column}
+  .stCat{font-size:20px;font-weight:800;margin:22px 0 2px}
+  .stLes{font-size:14px;color:var(--accent);font-weight:700;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+  .stS{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:19px;line-height:1.35}
+  .stS mark{background:none;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
   .map{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:2px 0}
   .stop{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 10px 14px;min-height:150px}
   .stop .ic{font-size:44px;line-height:1}
@@ -128,11 +134,20 @@
     <div class="quick">
       <button id="remix"><span>🔀</span><b>Remix</b><small>Mixed sentences from every topic</small></button>
       <button id="podcast"><span>🎧</span><b>Connectors podcast</b><small>What the little words mean</small></button>
+      <button id="studiedBtn" class="wide"><span>📖</span><div><b>My sentences</b><small>Read all the sentences I have studied</small></div></button>
     </div>
     <div class="banner" id="voiceBanner" hidden></div>
     <h2>Choose a topic</h2>
     <div class="map" id="map"></div>
     <p class="note">Tap Start before you drive (or ask a passenger), then keep this page open with the screen on. After that, it's all voice. Everything is saved on this phone only.</p>
+  </section>
+
+  <!-- STUDIED SENTENCES -->
+  <section id="studied" hidden>
+    <button class="back" id="backStudied">‹ Back</button>
+    <h1>📖 My sentences</h1>
+    <p class="sub" id="studiedSub"></p>
+    <div id="studiedList"></div>
   </section>
 
   <!-- CATEGORY -->
@@ -237,7 +252,12 @@ function esc(s){ return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '
 let paused = false, running = false, skipReq = false, repeatReq = false, wakeLock = null, audioCtx = null;
 let switchReq = null, curCatId = null, kind = 'cat', sess = 0;
 const halted = () => !running || skipReq || repeatReq || !!switchReq;
-function interrupt(){ try { synth.cancel(); } catch {} }
+let pendingFin = null, lastCancel = 0;
+function interrupt(){
+  try { synth.cancel(); } catch {}
+  lastCancel = Date.now();
+  const f = pendingFin; pendingFin = null; if (f) f();   // don't wait for iOS to report the cancelled speech
+}
 function beep(f = 660, ms = 120){
   try { if (!audioCtx) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = f; g.gain.value = 0.08; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + ms / 1000); } catch {}
 }
@@ -260,17 +280,24 @@ function speakSegs(segs, lang){
   return new Promise(res => {
     if (!running || !synth || !segs.length) return res();
     setPill('Listen', 'speak');
-    let n = 0, done = false;
+    let n = 0, done = false, guard = null;
     const total = segs.reduce((a, s) => a + s.text.length, 0);
-    const fin = () => { if (!done){ done = true; clearTimeout(guard); res(); } };
-    const guard = setTimeout(fin, 2500 + total * 110 / S.settings.rate);
-    segs.forEach(s => {
-      const u = makeUtt(s.text, lang, s.rate);
-      if (s.pitch) u.pitch = s.pitch;
-      if (s.volume != null) u.volume = s.volume;
-      u.onend = u.onerror = () => { if (++n >= segs.length) fin(); };
-      synth.speak(u);
-    });
+    const fin = () => { if (!done){ done = true; clearTimeout(guard); if (pendingFin === fin) pendingFin = null; res(); } };
+    pendingFin = fin;
+    const go = () => {
+      if (done) return;
+      if (halted()) return fin();
+      guard = setTimeout(fin, 2500 + total * 110 / S.settings.rate);
+      segs.forEach(s => {
+        const u = makeUtt(s.text, lang, s.rate);
+        if (s.pitch) u.pitch = s.pitch;
+        if (s.volume != null) u.volume = s.volume;
+        u.onend = u.onerror = () => { if (++n >= segs.length) fin(); };
+        synth.speak(u);
+      });
+    };
+    const wait = 160 - (Date.now() - lastCancel);   // iOS drops speech that starts right after cancel()
+    if (wait > 0) setTimeout(go, wait); else go();
   });
 }
 const say = (text, lang = 'en') => speakSegs([{ text, rate: lang === 'es' ? Math.min(S.settings.rate, 0.95) : S.settings.rate }], lang);
@@ -422,7 +449,7 @@ function suggest(avoidId){
 }
 
 /* ---------- screens ---------- */
-function show(v){ ['home', 'cat', 'live'].forEach(id => $('#' + id).hidden = id !== v); window.scrollTo(0, 0); }
+function show(v){ ['home', 'cat', 'live', 'studied'].forEach(id => $('#' + id).hidden = id !== v); window.scrollTo(0, 0); }
 function renderHome(){
   const cats = playable();
   const totalL = cats.reduce((a, c) => a + c.lessons.length, 0);
@@ -441,6 +468,21 @@ function renderHome(){
     return '<button class="stop ' + cls + '" data-id="' + c.id + '"' + (n ? '' : ' disabled') + '>' +
       '<span class="ic">' + (d >= n && n ? '⭐' : c.icon) + '</span><div class="nm">' + esc(c.name) + '</div><div class="ss">' + esc(c.es) + '</div>' + (n ? dots : '<div class="ss">Coming soon</div>') + '</button>';
   }).join('');
+}
+function openStudied(){
+  let nS = 0, nL = 0;
+  const html = CATEGORIES.map(c => {
+    const f = fin(c.id).slice().sort((a, b) => a - b).filter(i => c.lessons[i]);
+    if (!f.length) return '';
+    nL += f.length;
+    return '<div class="stCat">' + esc(c.icon + ' ' + c.name) + '</div>' + f.map(i => {
+      const l = c.lessons[i];
+      return '<div class="stLes">Lesson ' + (i + 1) + ': ' + esc(l.t) + '</div>' + l.s.map(([r]) => { nS++; return '<div class="stS">' + parse(r).map(p => p.c ? '<mark>' + esc(p.t) + '</mark>' : esc(p.t)).join('') + '</div>'; }).join('');
+    }).join('');
+  }).join('');
+  $('#studiedSub').textContent = nS ? nS + ' sentences from ' + nL + ' lesson' + (nL === 1 ? '' : 's') + '. Connecting words are highlighted.' : 'Finish a lesson and its sentences will show up here.';
+  $('#studiedList').innerHTML = html;
+  show('studied');
 }
 function openPodcast(){
   kind = 'podcast';
@@ -506,6 +548,8 @@ function openCat(id){
 /* ---------- wiring ---------- */
 $('#remix').onclick = () => { buildRemix(); runSession('remix', 0); };
 $('#podcast').onclick = () => openPodcast();
+$('#studiedBtn').onclick = openStudied;
+$('#backStudied').onclick = () => { show('home'); renderHome(); };
 $('#map').onclick = e => { const b = e.target.closest('.stop'); if (b && !b.disabled) openCat(b.dataset.id); };
 $('#lessonList').onclick = e => { const b = e.target.closest('.lessonrow'); if (!b || b.disabled) return; const id = $('#lessonList').dataset.id; if (id === 'podcast') runPodcast(Number(b.dataset.i)); else runSession(id, Number(b.dataset.i)); };
 $('#backHome').onclick = () => { show('home'); renderHome(); };
