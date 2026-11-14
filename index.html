@@ -74,6 +74,9 @@
   .bar{height:10px;border-radius:6px;background:var(--card);border:1px solid var(--line);overflow:hidden;margin:6px 0 10px}
   #barfill{height:100%;width:0;background:var(--accent)}
   .cheer{font-size:28px;font-weight:800;color:var(--gold);line-height:1.3}
+  .speed{display:grid;grid-template-columns:72px 1fr 72px;gap:10px;align-items:center;margin-top:18px;text-align:center;color:var(--muted);font-size:17px}
+  .speed .ghost{font-size:30px;padding:10px 0;line-height:1}
+  .speed b{color:var(--text);font-size:20px}
   .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
   .pausebtn{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:22px;padding:20px 10px}
   .stopbtn{border-color:#7f3b3b;color:#f87171}
@@ -92,7 +95,7 @@
       <summary>Settings</summary>
       <div class="row"><label for="es">Say the Spanish out loud</label><input type="checkbox" id="es"></div>
       <div class="row"><label for="keep">Keep going after each lesson</label><input type="checkbox" id="keep"></div>
-      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.7" max="1.1" step="0.05"></div>
+      <div class="row"><label for="rate">Coach speed</label><input type="range" id="rate" min="0.5" max="1.3" step="0.05"></div>
       <div class="row"><label for="vEn">English voice</label><select id="vEn"></select></div>
       <div class="row"><label for="vEs">Spanish voice</label><select id="vEs"></select></div>
       <p class="note" id="voiceInfo"></p>
@@ -132,6 +135,7 @@
     <p class="es-line" id="esLine"></p>
     <div class="bar"><div id="barfill"></div></div>
     <div class="dots" id="sdots"></div>
+    <div class="speed"><button class="ghost" id="slower" aria-label="Slower">−</button><div class="sv">Speed <b id="speedVal"></b></div><button class="ghost" id="faster" aria-label="Faster">+</button></div>
     <div class="controls">
       <button class="ghost pausebtn" id="pause">Pause</button>
       <button class="ghost" id="repeat">Repeat</button>
@@ -403,7 +407,11 @@ $('#es').checked = S.settings.es; $('#es').onchange = e => { S.settings.es = e.t
 $('#keep').checked = S.settings.keep; $('#keep').onchange = e => { S.settings.keep = e.target.checked; save(); };
 $('#vEn').onchange = e => { S.settings.vEn = e.target.value; save(); pickVoices(); };
 $('#vEs').onchange = e => { S.settings.vEs = e.target.value; save(); pickVoices(); };
-$('#rate').value = S.settings.rate; $('#rate').oninput = e => { S.settings.rate = Number(e.target.value); save(); };
+function setRate(r){ r = Math.min(1.3, Math.max(0.5, Math.round(r * 20) / 20)); S.settings.rate = r; save(); $('#rate').value = r; $('#speedVal').textContent = r.toFixed(2) + '×'; }
+$('#rate').oninput = e => setRate(Number(e.target.value));
+$('#slower').onclick = () => setRate(S.settings.rate - 0.05);
+$('#faster').onclick = () => setRate(S.settings.rate + 0.05);
+setRate(S.settings.rate);
 $('#reset').onclick = () => { if (confirm('Reset all progress?')){ const st = S.settings; S = clone(DEF); S.settings = st; save(); renderHome(); } };
 document.addEventListener('visibilitychange', async () => { if (running && !document.hidden && navigator.wakeLock){ try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } });
 if (!synth) document.querySelector('.sub').textContent = 'This browser can’t speak out loud. Please open this page in Safari on an iPhone.';
